@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRADAA 2026 â€” Tableau de bord Admin | AEEMCI</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- jsPDF for receipt re-generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+  <style>
+    /* â”€â”€ Admin Layout â”€â”€ */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform var(--transition-base);
+    }
+
+    .sidebar__header {
+      padding: var(--space-6);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .sidebar__logo img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .sidebar__logo-text {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+    }
+
+    .sidebar__event-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-3);
+      font-size: 0.75rem;
+      color: white;
+    }
+
+    .sidebar__nav {
+      flex: 1;
+      padding: var(--space-4) 0;
+      overflow-y: auto;
+    }
+
+    .sidebar__nav-section {
+      padding: var(--space-2) var(--space-4);
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: var(--space-3);
+    }
+
+    .sidebar__nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-size: 0.9rem;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar__nav-item:hover {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .sidebar__nav-item.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-left-color: white;
+    }
+
+    .sidebar__footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar__user {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .sidebar__user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: white;
+    }
+
+    .sidebar__user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar__user-email {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* â”€â”€ Main Content â”€â”€ */
+    .admin-main {
+      margin-left: 260px;
+      flex: 1;
+      min-height: 100vh;
+      background: #FFFDF9;
+    }
+
+    .admin-topbar {
+      background: white;
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .admin-topbar h2 {
+      font-size: 1.2rem;
+      color: var(--color-text);
+    }
+
+    .admin-content {
+      padding: var(--space-6);
+    }
+
+    /* â”€â”€ KPI Cards â”€â”€ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .kpi-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .kpi-card--orange::before { background: var(--color-primary); }
+    .kpi-card--green::before { background: var(--color-secondary); }
+    .kpi-card--blue::before { background: #2563EB; }
+    .kpi-card--purple::before { background: #7C3AED; }
+
+    .kpi-card__icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-2);
+    }
+
+    .kpi-card__value {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .kpi-card--orange .kpi-card__value { color: var(--color-primary); }
+    .kpi-card--green .kpi-card__value { color: var(--color-secondary); }
+    .kpi-card--blue .kpi-card__value { color: #2563EB; }
+    .kpi-card--purple .kpi-card__value { color: #7C3AED; }
+
+    .kpi-card__label {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .kpi-card__sub {
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+      margin-top: var(--space-1);
+    }
+
+    /* â”€â”€ Charts â”€â”€ */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+    }
+
+    .chart-card__title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--color-text);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* â”€â”€ Participants Table â”€â”€ */
+    .table-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .table-toolbar__title {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .table-toolbar__controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: var(--space-2) var(--space-3);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      outline: none;
+      width: 220px;
+      transition: border-color var(--transition-fast);
+    }
+
+    .search-input:focus {
+      border-color: var(--color-primary);
+    }
+
+    .filter-select {
+      padding: var(--space-2) var(--space-3);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      outline: none;
+      background: white;
+      cursor: pointer;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .data-table th {
+      background: #F9FAFB;
+      padding: var(--space-3) var(--space-4);
+      text-align: left;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .data-table td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid #F9FAFB;
+      color: var(--color-text);
+    }
+
+    .data-table tr:hover td {
+      background: #FAFAFA;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+    }
+
+    .table-pagination {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    /* â”€â”€ QR Code Section â”€â”€ */
+    .qr-section {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      text-align: center;
+    }
+
+    /* â”€â”€ Mobile Sidebar Toggle â”€â”€ */
+    .sidebar-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--color-text);
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .admin-main {
+        margin-left: 0;
+      }
+      .sidebar-toggle {
+        display: block;
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .admin-content {
+        padding: var(--space-4);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- â”€â”€ Sidebar â”€â”€ -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navigation administrateur">
+    <div class="sidebar__header">
+      <div class="sidebar__logo">
+        <img src="assets/logo-aeemci.png" alt="AEEMCI" onerror="this.style.display='none'" />
+        <span class="sidebar__logo-text">GRADAA Admin</span>
+      </div>
+      <div class="sidebar__event-badge">ðŸ“… 27 septembre 2026</div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="sidebar__nav-section">Principal</div>
+      <button class="sidebar__nav-item active" data-section="overview" id="nav-overview">
+        ðŸ“Š Vue d'ensemble
+      </button>
+      <button class="sidebar__nav-item" data-section="participants" id="nav-participants">
+        ðŸ‘¥ Participants
+      </button>
+      <button class="sidebar__nav-item" data-section="checkin" id="nav-checkin">
+        âœ… Check-in
+      </button>
+
+      <div class="sidebar__nav-section">Outils</div>
+      <button class="sidebar__nav-item" data-section="qrcode" id="nav-qrcode">
+        ðŸ”³ QR Code
+      </button>
+      <button class="sidebar__nav-item" data-section="export" id="nav-export">
+        ðŸ“¥ Export donnÃ©es
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__user">
+        <div class="sidebar__user-avatar" id="user-avatar">A</div>
+        <div class="sidebar__user-info">
+          <div style="font-size:0.85rem;color:white;font-weight:600;">Administrateur</div>
+          <div class="sidebar__user-email" id="user-email">â€”</div>
+        </div>
+      </div>
+      <button id="btn-logout" class="btn btn--ghost btn--sm btn--full" style="color:#9CA3AF;border-color:rgba(255,255,255,0.1);">
+        ðŸšª DÃ©connexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- â”€â”€ Main Content â”€â”€ -->
+  <main class="admin-main" role="main">
+
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:var(--space-4);">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">â˜°</button>
+        <h2 id="page-title">ðŸ“Š Vue d'ensemble</h2>
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-3);">
+        <div id="realtime-indicator" style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--color-secondary);">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--color-secondary);display:inline-block;animation:pulse 2s ease infinite;"></span>
+          Temps rÃ©el
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" style="text-align:center;padding:var(--space-12);">
+        <span class="spinner spinner--dark" style="width:40px;height:40px;border-width:3px;"></span>
+        <p style="margin-top:var(--space-4);color:var(--color-text-muted);">Chargement des donnÃ©esâ€¦</p>
+      </div>
+
+      <!-- â”€â”€ SECTION: Overview â”€â”€ -->
+      <section id="section-overview" class="section-content" style="display:none;">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--orange">
+            <div class="kpi-card__icon">ðŸ‘¥</div>
+            <div class="kpi-card__value" id="kpi-total">â€”</div>
+            <div class="kpi-card__label">Total inscrits</div>
+            <div class="kpi-card__sub" id="kpi-total-sub">Mise Ã  jour en temps rÃ©el</div>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-card__icon">âœ…</div>
+            <div class="kpi-card__value" id="kpi-checkedin">â€”</div>
+            <div class="kpi-card__label">PrÃ©sents (Jour J)</div>
+            <div class="kpi-card__sub" id="kpi-checkedin-sub">Check-in validÃ©</div>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <div class="kpi-card__icon">ðŸ“Š</div>
+            <div class="kpi-card__value" id="kpi-rate">â€”%</div>
+            <div class="kpi-card__label">Taux de prÃ©sence</div>
+            <div class="kpi-card__sub">PrÃ©sents / Inscrits</div>
+          </div>
+          <div class="kpi-card kpi-card--purple">
+            <div class="kpi-card__icon">ðŸ“§</div>
+            <div class="kpi-card__value" id="kpi-emails">â€”</div>
+            <div class="kpi-card__label">Emails envoyÃ©s</div>
+            <div class="kpi-card__sub" id="kpi-emails-sub">ReÃ§us confirmÃ©s</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card__title">ðŸ“ˆ Ã‰volution des inscriptions</div>
+            <canvas id="chart-registrations" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title">ðŸ˜ï¸ RÃ©partition sous-comitÃ©s</div>
+            <canvas id="chart-subcommittees" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent registrations -->
+        <div class="table-card">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">ðŸ• DerniÃ¨res inscriptions</span>
+          </div>
+          <div id="recent-table-wrapper">
+            <table class="data-table" id="recent-table">
+              <thead>
+                <tr>
+                  <th>NÂ°</th>
+                  <th>Nom</th>
+                  <th>Email</th>
+                  <th>Sous-comitÃ©</th>
+                  <th>Date</th>
+                  <th>Check-in</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- â”€â”€ SECTION: Participants â”€â”€ -->
+      <section id="section-participants" class="section-content" style="display:none;">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">ðŸ‘¥ Liste des participants</span>
+            <div class="table-toolbar__controls">
+              <input
+                type="search"
+                id="search-input"
+                class="search-input"
+                placeholder="ðŸ” Rechercherâ€¦"
+                aria-label="Rechercher un participant"
+              />
+              <select id="filter-subcommittee" class="filter-select" aria-label="Filtrer par sous-comitÃ©">
+                <option value="">Tous les sous-comitÃ©s</option>
+                <option value="Anyama 1">Anyama 1</option>
+                <option value="Anyama 2">Anyama 2</option>
+                <option value="none">Non renseignÃ©</option>
+              </select>
+              <select id="filter-checkin" class="filter-select" aria-label="Filtrer par check-in">
+                <option value="">Tous</option>
+                <option value="true">PrÃ©sents</option>
+                <option value="false">Absents</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="participants-table">
+              <thead>
+                <tr>
+                  <th>NÂ° Inscr.</th>
+                  <th>Nom</th>
+                  <th>PrÃ©nom</th>
+                  <th>Email</th>
+                  <th>TÃ©lÃ©phone</th>
+                  <th>Sous-comitÃ©</th>
+                  <th>Check-in</th>
+                  <th>Email envoyÃ©</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="participants-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-pagination">
+            <span id="pagination-info">â€” participants</span>
+            <div style="display:flex;gap:var(--space-2);">
+              <button id="btn-prev" class="btn btn--ghost btn--sm">â† PrÃ©c.</button>
+              <button id="btn-next" class="btn btn--ghost btn--sm">Suiv. â†’</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- â”€â”€ SECTION: Check-in â”€â”€ -->
+      <section id="section-checkin" class="section-content" style="display:none;">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--orange">
+            <div class="kpi-card__icon">ðŸ“‹</div>
+            <div class="kpi-card__value" id="ci-total">â€”</div>
+            <div class="kpi-card__label">Total inscrits</div>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-card__icon">âœ…</div>
+            <div class="kpi-card__value" id="ci-present">â€”</div>
+            <div class="kpi-card__label">PrÃ©sents</div>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <div class="kpi-card__icon">â³</div>
+            <div class="kpi-card__value" id="ci-absent">â€”</div>
+            <div class="kpi-card__label">Non encore arrivÃ©s</div>
+          </div>
+          <div class="kpi-card kpi-card--purple">
+            <div class="kpi-card__icon">ðŸ“ˆ</div>
+            <div class="kpi-card__value" id="ci-rate">â€”%</div>
+            <div class="kpi-card__label">Taux de prÃ©sence</div>
+          </div>
+        </div>
+        <div class="chart-card" style="max-width:400px;">
+          <div class="chart-card__title">PrÃ©sence en temps rÃ©el</div>
+          <canvas id="chart-presence" height="250"></canvas>
+        </div>
+      </section>
+
+      <!-- â”€â”€ SECTION: QR Code â”€â”€ -->
+      <section id="section-qrcode" class="section-content" style="display:none;">
+        <div class="qr-section" style="max-width:480px;margin:0 auto;">
+          <h2 style="margin-bottom:var(--space-4);">ðŸ”³ QR Code Check-in</h2>
+          <p style="color:var(--color-text-muted);margin-bottom:var(--space-6);">
+            Imprimez ce QR code sur le panneau Ã  l'entrÃ©e de la salle. Les participants le scanneront avec leur smartphone pour accÃ©der Ã  la page de check-in.
+          </p>
+
+          <div id="qr-code-container" style="display:inline-block;padding:var(--space-4);background:white;border:2px solid var(--color-border);border-radius:var(--radius-lg);margin-bottom:var(--space-4);"></div>
+
+          <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-5);font-size:0.85rem;">
+            <strong>URL :</strong> <span id="qr-url" style="color:var(--color-primary);word-break:break-all;"></span>
+          </div>
+
+          <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap;">
+            <button id="btn-download-qr" class="btn btn--primary">
+              â¬‡ï¸ TÃ©lÃ©charger le QR Code
+            </button>
+            <button id="btn-print-qr" class="btn btn--outline">
+              ðŸ–¨ï¸ Imprimer
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- â”€â”€ SECTION: Export â”€â”€ -->
+      <section id="section-export" class="section-content" style="display:none;">
+        <div class="card" style="max-width:600px;">
+          <h2 style="margin-bottom:var(--space-4);">ðŸ“¥ Export des donnÃ©es</h2>
+
+          <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+            <div class="card card--orange">
+              <h4 style="margin-bottom:var(--space-2);">ðŸ“„ Export CSV</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Exporte tous les participants avec leurs informations complÃ¨tes au format CSV, compatible Excel et Google Sheets.
+              </p>
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+                <button id="btn-export-all" class="btn btn--primary">
+                  ðŸ“Š Exporter tous les inscrits
+                </button>
+                <button id="btn-export-present" class="btn btn--secondary">
+                  âœ… Exporter les prÃ©sents seulement
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 style="margin-bottom:var(--space-2);">ðŸ“§ Emails non envoyÃ©s</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Liste des participants n'ayant pas reÃ§u leur reÃ§u par email.
+              </p>
+              <button id="btn-export-email-failed" class="btn btn--outline">
+                ðŸ“‹ Exporter la liste des emails non envoyÃ©s
+              </button>
+            </div>
+
+            <div class="card">
+              <h4 style="margin-bottom:var(--space-2);">ðŸ“§ Renvoi d'emails en masse</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Met en file d'attente le renvoi des reÃ§us pour tous les participants dont l'email n'a pas Ã©tÃ© envoyÃ©.
+              </p>
+              <button id="btn-resend-all-emails" class="btn btn--outline-green">
+                ðŸ”„ Re-planifier l'envoi des emails manquants
+              </button>
+              <div id="resend-result" style="margin-top:var(--space-3);display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;" onclick="document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').style.display='none';"></div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/pdf-generator.js"></script>
+<script src="js/email-service.js"></script>
+<script src="js/qr-generator.js"></script>
+<script src="js/admin.js"></script>
+
+<!-- qrcode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>

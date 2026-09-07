@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidParticipant(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'email', 'phone', 'eventId', 'registeredAt'])
+        && data.firstName is string && data.firstName.size() > 0
+        && data.lastName is string && data.lastName.size() > 0
+        && data.email is string && data.email.matches('.*@.*\\..*')
+        && data.phone is string && data.phone.size() >= 8
+        && data.eventId is string;
+    }
+
+    // ─── Events (read public, write admin) ──────────────────────────────
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Participants ────────────────────────────────────────────────────
+    match /participants/{participantId} {
+      // Public can register (create), not read others
+      allow create: if isValidParticipant(request.resource.data);
+      // Participants can read their own record via ID
+      allow read: if isAdmin()
+        || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      // Only admins can update/delete
+      allow update, delete: if isAdmin();
+      // Public can read by ID (for receipt page) - relaxed for usability
+      allow get: if true;
+    }
+
+    // ─── Admins ─────────────────────────────────────────────────────────
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ─── Email Queue (Cloud Functions write) ────────────────────────────
+    match /emailQueue/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() || request.auth == null; // CF service account
+    }
+
+    // ─── App Config ─────────────────────────────────────────────────────
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

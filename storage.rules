@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Profile Photos ──────────────────────────────────────────────────
+    match /photos/{eventId}/{participantId} {
+      // Anyone can upload a photo (during registration)
+      allow write: if request.resource.size < 5 * 1024 * 1024   // max 5MB
+        && request.resource.contentType.matches('image/.*');
+      // Admins and the participant can read
+      allow read: if true; // Public for receipt display
+    }
+
+    // ─── Receipts (PDF) ──────────────────────────────────────────────────
+    match /receipts/{eventId}/{fileName} {
+      allow read: if true;  // Public link in email
+      allow write: if request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    // ─── Assets (logo, etc.) ─────────────────────────────────────────────
+    match /assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if false; // Only via Firebase Console
+    }
+  }
+}
