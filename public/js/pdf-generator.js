@@ -106,7 +106,7 @@ window.GradaPDF = (() => {
     doc.rect(0, 8, W, 45, 'F');
 
     // Load and draw logos
-    const aeemciLogoData = await getLogoBase64('logo_aeemci.png');
+    const aeemciLogoData = await getLogoBase64('logo_aeemci_v2.png');
     const gradaaLogoData = await getLogoBase64('assets/logo-gradaa.png');
     
     if (aeemciLogoData) {

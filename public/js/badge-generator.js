@@ -105,13 +105,17 @@ window.GradaBadge = (() => {
     if (logos.gradaa) doc.addImage(logos.gradaa, 'PNG', x + BADGE_W - 12, y + 8, 10, 10);
 
     // Event Title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    setTextColor(doc, isCO ? COLORS.white : COLORS.text);
-    doc.text('GRADAA 2026', x + BADGE_W / 2, y + 12, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6);
-    doc.text('ANYAMA', x + BADGE_W / 2, y + 15, { align: 'center' });
+    if (logos.gradaaBadge) {
+      doc.addImage(logos.gradaaBadge, 'PNG', x + BADGE_W / 2 - 16, y + 8, 32, 10);
+    } else {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      setTextColor(doc, isCO ? COLORS.white : COLORS.text);
+      doc.text('GRADAA 2026', x + BADGE_W / 2, y + 12, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.text('ANYAMA', x + BADGE_W / 2, y + 15, { align: 'center' });
+    }
 
     // Photo
     const photoY = y + 20;
@@ -191,8 +195,9 @@ window.GradaBadge = (() => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     const logos = {
-      aeemci: await getLogoBase64('logo_aeemci.png'),
-      gradaa: await getLogoBase64('assets/logo-gradaa.png')
+      aeemci: await getLogoBase64('logo_aeemci_v2.png'),
+      gradaa: await getLogoBase64('assets/logo-gradaa.png'),
+      gradaaBadge: await getLogoBase64('assets/logo-gradaa-badge.png')
     };
 
     let count = 0;
