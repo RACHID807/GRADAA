@@ -152,7 +152,7 @@ function buildEmailHtml(participant) {
     </div>
 
     <p style="color:#6B7280;font-size:0.85rem;text-align:center;">
-      Baraka Allah ou fikoum — Nous vous souhaitons une excellente journée le 27 septembre 2026 !
+      Baraka Allah ou fikoum — Nous vous souhaitons une excellente journée le 4 octobre 2026 !
     </p>
   </div>
 

@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </head><body>
       <h1>GRADAA 2026</h1>
       <p>Scannez ce QR code pour accéder au formulaire de check-in</p>
-      <p style="color:#F97316;font-weight:bold;">27 septembre 2026 — Anyama, Côte d'Ivoire</p>
+      <p style="color:#F97316;font-weight:bold;">4 octobre 2026 — Anyama, Côte d'Ivoire</p>
       <img src="${img}" alt="QR Code Check-in GRADAA 2026" />
       <p style="margin-top:1rem;font-size:0.85rem;">${window.location.origin}/checkin.html</p>
       <script>window.print();<\/script>
@@ -1021,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-generate-badges-pco')?.addEventListener('click', () => {
     const pcoData = [{
       name: "DIARRA CHEICK OMER",
-      profession: "Président du Comité",
+      profession: "Président du Comité d'Organisation",
       committee: "",
       id: "GRA-PCO0001",
       role: "PCO",

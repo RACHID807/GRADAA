@@ -1,7 +1,7 @@
 # GRADA 2026 — Documentation de Déploiement
 
 > Application web de gestion du rassemblement GRADA organisé par le Sous-comité 1-2 Anyama de l'AEEMCI.  
-> Date de l'activité : **27 septembre 2026**
+> Date de l'activité : **4 octobre 2026**
 
 ---
 
@@ -244,8 +244,8 @@ Dans la Firebase Console → Firestore → Créer manuellement :
   "id": "grada-2026",
   "name": "GRADA 2026",
   "fullName": "Grand Rassemblement Des Anciens",
-  "date": "2026-09-27",
-  "dateDisplay": "27 septembre 2026",
+  "date": "2026-10-04",
+  "dateDisplay": "4 octobre 2026",
   "location": "Anyama, Côte d'Ivoire",
   "organizer": "Sous-comité 1-2 Anyama de l'AEEMCI",
   "organizerFull": "Association des Élèves et Étudiants Musulmans de Côte d'Ivoire",
