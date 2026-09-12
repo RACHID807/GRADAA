@@ -191,7 +191,7 @@ window.GradaBadge = (() => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     const logos = {
-      aeemci: await getLogoBase64('assets/logo-aeemci.png'),
+      aeemci: await getLogoBase64('logo_aeemci.png'),
       gradaa: await getLogoBase64('assets/logo-gradaa.png')
     };
 

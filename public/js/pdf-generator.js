@@ -106,7 +106,7 @@ window.GradaPDF = (() => {
     doc.rect(0, 8, W, 45, 'F');
 
     // Load and draw logos
-    const aeemciLogoData = await getLogoBase64('assets/logo-aeemci.png');
+    const aeemciLogoData = await getLogoBase64('logo_aeemci.png');
     const gradaaLogoData = await getLogoBase64('assets/logo-gradaa.png');
     
     if (aeemciLogoData) {
@@ -128,7 +128,7 @@ window.GradaPDF = (() => {
     doc.text('Association des Élèves et Étudiants Musulmans de Côte d\'Ivoire', W / 2, 25, { align: 'center' });
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Secteur / Abidjan Nord', W / 2, 30, { align: 'center' });
+    doc.text('Secrétariat Régional Abidjan Nord', W / 2, 30, { align: 'center' });
     doc.text('Sous-comité 1 ET 2 d\'Anyama', W / 2, 35, { align: 'center' });
 
     // ── REÇU D'INSCRIPTION Badge ────────────────────────────────
