@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasRole(roleList) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in roleList;
+    }
+
+    function isSuperAdmin() {
+      return hasRole(['SUPER_ADMIN']);
+    }
+
+    function isValidAdmin() {
+      return hasRole(['SUPER_ADMIN', 'PCO', 'FINANCE']);
+    }
+
+    function isValidParticipant(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'email', 'phone', 'eventId', 'registeredAt'])
+        && data.firstName is string && data.firstName.size() > 0
+        && data.lastName is string && data.lastName.size() > 0
+        && data.email is string && data.email.matches('.*@.*\\..*')
+        && data.phone is string && data.phone.size() >= 8
+        && data.eventId is string;
+    }
+
+    // ─── Events (read public, write admin) ──────────────────────────────
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isValidAdmin();
+    }
+
+    // ─── Participants ────────────────────────────────────────────────────
+    match /participants/{participantId} {
+      // Public can register (create), not read others
+      allow create: if isValidParticipant(request.resource.data);
+      // Participants can read their own record via ID
+      allow read: if isValidAdmin()
+        || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      // Only admins can update/delete
+      allow update, delete: if isValidAdmin();
+      // Public can read by ID (for receipt page) - relaxed for usability
+      allow get: if true;
+    }
+
+    // ─── Admins ─────────────────────────────────────────────────────────
+    match /admins/{adminId} {
+      // Allow self-read, or Super Admin read
+      allow get: if isAuthenticated() && request.auth.uid == adminId || isSuperAdmin();
+      // Allow Super Admin to list all admins
+      allow list: if isSuperAdmin();
+      
+      // Allow a new user to create their own 'EN_ATTENTE' document
+      allow create: if isAuthenticated() 
+        && request.auth.uid == adminId 
+        && request.resource.data.role == 'EN_ATTENTE';
+        
+      // Allow self-update of email ONLY (cannot change own role)
+      allow update: if (isAuthenticated() && request.auth.uid == adminId && request.resource.data.role == resource.data.role)
+        || isSuperAdmin();
+        
+      // Only Super Admin can delete
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── Email Queue (Cloud Functions write) ────────────────────────────
+    match /emailQueue/{docId} {
+      allow read: if isValidAdmin();
+      allow write: if isValidAdmin() || request.auth == null; // CF service account
+    }
+
+    // ─── App Config ─────────────────────────────────────────────────────
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isValidAdmin();
+    }
+  }
+}

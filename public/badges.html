@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badges GRADAA 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --cream:         #FFF6EA;
+    --charcoal:      #241E19;
+    --paper:         #FFFFFF;
+    
+    /* THEME PARTICIPANT (Orange GRADAA) */
+    --t-part-bg: linear-gradient(135deg, #E4650B, #F58220 60%, #FBAE5C);
+    --t-part-pill: #FFFFFF;
+    --t-part-text: #E4650B;
+    --t-part-foot: #1D7A4C;
+
+    /* THEME CO (Vert AEEMCI) */
+    --t-co-bg: linear-gradient(135deg, #0B4628, #1D7A4C 60%, #2EB86F);
+    --t-co-pill: #F58220;
+    --t-co-text: #FFFFFF;
+    --t-co-foot: #0B4628;
+
+    /* THEME PCO (Bleu Nuit & Or) */
+    --t-pco-bg: linear-gradient(135deg, #091734, #122B5E 60%, #1E4491);
+    --t-pco-pill: #FBAE5C;
+    --t-pco-text: #091734;
+    --t-pco-foot: #091734;
+
+    /* THEME PANELISTE (Violet) */
+    --t-pan-bg: linear-gradient(135deg, #320F52, #5B2A86 60%, #834BB3);
+    --t-pan-pill: #FBAE5C;
+    --t-pan-text: #320F52;
+    --t-pan-foot: #320F52;
+
+    /* THEME MEDIAS (Anthracite / Or) */
+    --t-med-bg: linear-gradient(135deg, #1A1A1A, #2C2C2C 60%, #4A4A4A);
+    --t-med-pill: #FBAE5C; 
+    --t-med-text: #1A1A1A;
+    --t-med-foot: #F58220;
+  }
+ 
+  * { box-sizing: border-box; }
+ 
+  html, body {
+    margin: 0;
+    background: #DCD5C8;
+    font-family: 'Inter', -apple-system, "Segoe UI", sans-serif;
+    color: var(--charcoal);
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+ 
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+ 
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    max-width: 900px; margin: 24px auto 0; padding: 16px 20px;
+    background: var(--paper); border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  }
+  .toolbar h1 {
+    font-family: 'Poppins', sans-serif; font-size: 19px;
+    margin: 0 0 6px; color: #E4650B;
+  }
+  .toolbar button {
+    margin-top: 10px; background: #1D7A4C; color: #fff;
+    border: none; padding: 10px 18px; border-radius: 8px;
+    font-weight: 600; cursor: pointer;
+  }
+ 
+  /* ---------- sheet layout ---------- */
+  .sheet {
+    max-width: 900px; margin: 20px auto 60px;
+    display: flex; flex-wrap: wrap; gap: 26px; justify-content: center;
+  }
+ 
+  /* ---------- badge ---------- */
+  .badge {
+    position: relative;
+    width: 336px; height: 528px;
+    background: var(--paper); border-radius: 18px;
+    overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,.16);
+    display: flex; flex-direction: column;
+  }
+ 
+  .hole-wrap {
+    position: absolute; top: 12px; left: 0; right: 0;
+    display: flex; justify-content: center; z-index: 5;
+  }
+  .hole {
+    width: 34px; height: 10px; background: #DCD5C8;
+    border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
+  }
+ 
+  /* EN-TÊTE COLORÉ ET AÉRÉ */
+  .header {
+    padding: 16px 14px 8px;
+    text-align: center; color: #fff; position: relative;
+  }
+ 
+  /* DISPOSITION DES LOGOS */
+  .logo-row {
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+  }
+  .logo-banner {
+    height: 48px; flex: 1; background: #fff;
+    border-radius: 8px; padding: 4px; margin: 0;
+    box-shadow: 0 3px 10px rgba(0,0,0,.15);
+  }
+  .logo-banner img { width: 100%; height: 100%; object-fit: contain; }
+ 
+  /* TITRE GRADAA */
+  .event-title-box {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .edition {
+    font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 10px;
+    color: #5B2A86; background: #fff; padding: 1px 10px;
+    border-radius: 20px; transform: rotate(-3deg);
+  }
+  .gradaa {
+    font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 24px;
+    letter-spacing: .5px; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+ 
+  /* PHOTO */
+  .photo-wrap {
+    margin: 6px auto 0; width: 72px; height: 72px;
+    border-radius: 50%; background: #fff; padding: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  }
+  .photo-wrap img {
+    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+  }
+ 
+  /* PILLULE STATUT */
+  .role-strip {
+    margin-top: -12px; position: relative; z-index: 10;
+    display: inline-block; border-radius: 20px; padding: 8px 24px;
+    font-size: 14px; font-weight: 800; letter-spacing: .5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-transform: uppercase;
+  }
+ 
+  /* CORPS DU BADGE */
+  .body {
+    flex: 1; background: var(--cream); padding: 10px 16px 6px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+ 
+  .name {
+    font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px;
+    line-height: 1.1; color: var(--charcoal); margin-bottom: 2px;
+    margin-top: 14px;
+  }
+  .profession { font-size: 12px; font-weight: 500; color: #666; margin-bottom: 10px; }
+  
+  .committee {
+    font-size: 12px; font-weight: 700; color: #fff; background: #0B4628;
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;
+  }
+ 
+  .qr-box {
+    background: #fff; padding: 6px; border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: auto; margin-bottom: 2px;
+  }
+  .qr-box canvas, .qr-box img { display: block; }
+ 
+  .reg-id { font-size: 11px; font-weight: 700; letter-spacing: .5px; margin-top: 2px; }
+ 
+  /* STYLE SPÉCIFIQUE PANELISTE ET MEDIAS */
+  .generic-title {
+    font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 34px;
+    margin: auto 0; line-height: 1.2; text-transform: uppercase;
+  }
+  .generic-sub { font-size: 13px; font-weight: 600; color: #666; }
+ 
+  /* FOOTER */
+  .footer { color: #fff; text-align: center; padding: 12px 16px; }
+  .footer .date { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .3px; }
+  .footer .place { font-size: 10px; font-weight: 500; opacity: .9; margin-top: 2px; }
+ 
+  /* DYNAMIQUE DES THEMES VIA CSS */
+  .PARTICIPANT .header { background: var(--t-part-bg); }
+  .PARTICIPANT .role-strip { background: var(--t-part-pill); color: var(--t-part-text); }
+  .PARTICIPANT .footer { background: var(--t-part-foot); }
+
+  .CO .header { background: var(--t-co-bg); }
+  .CO .role-strip { background: var(--t-co-pill); color: var(--t-co-text); }
+  .CO .footer { background: var(--t-co-foot); }
+
+  .PCO .header { background: var(--t-pco-bg); }
+  .PCO .role-strip { background: var(--t-pco-pill); color: var(--t-pco-text); }
+  .PCO .footer { background: var(--t-pco-foot); }
+
+  .PANELISTE .header { background: var(--t-pan-bg); }
+  .PANELISTE .role-strip { background: var(--t-pan-pill); color: var(--t-pan-text); }
+  .PANELISTE .footer { background: var(--t-pan-foot); }
+  .PANELISTE .generic-title { color: #5B2A86; }
+
+  .MEDIAS .header { background: var(--t-med-bg); }
+  .MEDIAS .role-strip { background: var(--t-med-pill); color: var(--t-med-text); }
+  .MEDIAS .footer { background: var(--t-med-foot); }
+  .MEDIAS .generic-title { color: var(--charcoal); }
+
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .sheet { gap: 0; margin: 0; max-width: none; justify-content: center; }
+    .badge { box-shadow: none; border: 1px dashed #bbb; margin: 0; page-break-after: always; break-after: page; }
+    @page { margin: 12mm; size: auto; }
+  }
+</style>
+</head>
+<body>
+ 
+  <div class="toolbar">
+    <h1>Générateur de Badges — GRADAA 2026</h1>
+    Design final intégré avec le système de base de données. 
+    Les données des participants et du staff sont chargées dynamiquement.<br>
+    <button onclick="window.print()">🖨️ Imprimer les badges</button>
+    <button onclick="window.close()" style="background:#8A7F72;">Fermer</button>
+  </div>
+ 
+  <div class="sheet" id="sheet"></div>
+ 
+<script>
+  // Load participants from session storage passed by admin.js
+  let participants = [];
+  try {
+    const rawData = sessionStorage.getItem('gradaa_badges_data');
+    if (rawData) {
+      participants = JSON.parse(rawData);
+    }
+  } catch(e) {
+    console.error("Error parsing badges data", e);
+  }
+
+  // Fallback for direct testing if sessionStorage is empty
+  if (participants.length === 0) {
+    participants = [
+      { name: "John DOE", committee: "", profession: "Étudiant", id: "GRA-TEST", role: "participant" },
+      { name: "Jane STAFF", committee: "Logistique", profession: "", id: "GRA-STAFF", role: "CO" },
+    ];
+  }
+ 
+  function fallbackPhoto(name, isStaff) {
+    const color = isStaff ? '0B4628' : 'E4650B';
+    return "https://api.dicebear.com/9.x/initials/svg?seed=" + encodeURIComponent(name) + "&backgroundColor=" + color + "&textColor=ffffff"; 
+  } 
+  
+  const sheet = document.getElementById('sheet'); 
+  
+  participants.forEach((p, i) => { 
+    // Détermination dynamique du thème basé sur le rôle issu de Firebase ou du bouton générique
+    let badgeTheme = "PARTICIPANT";
+    if (p.role === "CO") badgeTheme = "CO";
+    else if (p.role === "PANELISTE") badgeTheme = "PANELISTE";
+    else if (p.role === "MEDIAS") badgeTheme = "MEDIAS";
+    else if (p.role === "PCO") badgeTheme = "PCO";
+
+    let displayRole = "PARTICIPANT";
+    if (p.role === "CO") displayRole = "C.O";
+    else if (p.role === "PANELISTE") displayRole = "PANÉLISTE";
+    else if (p.role === "MEDIAS") displayRole = "MÉDIAS";
+    else if (p.role === "PCO") displayRole = "PCO";
+
+    const isNominative = (badgeTheme === "PARTICIPANT" || badgeTheme === "CO" || badgeTheme === "PCO");
+    const fullName = p.name || "";
+    const profession = p.profession || (badgeTheme === "PARTICIPANT" ? "Participant" : "");
+    const commission = p.committee || (badgeTheme === "CO" ? "Commission" : "");
+    const qrUrl = "https://gradaa.ci/verify/" + (p.rawId || p.id);
+    
+    let finalPhotoUrl = p.photo;
+    if (!finalPhotoUrl) {
+      if (badgeTheme === "PCO") {
+        finalPhotoUrl = "assets/pco-photo.jpg";
+      } else {
+        finalPhotoUrl = fallbackPhoto(fullName, badgeTheme === "CO");
+      }
+    }
+    
+    const headerHTML = isNominative ? `
+        <div class="photo-wrap">
+          <img src="${finalPhotoUrl}" alt="Photo">
+        </div>
+    ` : `<div style="height: 20px;"></div>`;
+
+    let bodyHTML = "";
+    if (isNominative) {
+        // Affiche la commission pour le CO
+        const commHTML = (badgeTheme === "CO" && commission) 
+            ? `<div class="committee">${commission}</div>` : ``;
+
+        bodyHTML = `
+          <div class="role-strip">${displayRole}</div> 
+          <div class="name">${fullName}</div>
+          <div class="profession">${profession}</div>
+          ${commHTML}
+          <div class="qr-box" id="qr-${i}"></div>
+          <div class="reg-id">${p.id}</div>
+        `;
+    } else {
+        bodyHTML = `
+          <div class="role-strip">${displayRole}</div> 
+          <div style="margin: auto 0;">
+             <div class="generic-sub">Accès Autorisé</div>
+             <div class="generic-title">${displayRole}</div>
+          </div>
+        `;
+    }
+
+    const badge = document.createElement('div'); 
+    badge.className = `badge ${badgeTheme}`; 
+    badge.innerHTML = `
+      <div class="hole-wrap"><div class="hole"></div></div> 
+      
+      <div class="header"> 
+        <div class="logo-row"> 
+          <div class="logo-banner"><img src="logo_texte.png" alt="AEEMCI 50 Ans" onerror="this.src='https://api.dicebear.com/9.x/initials/svg?seed=AEEMCI&backgroundColor=ffffff&textColor=0B4628'"></div>
+        </div> 
+        <div class="event-title-box">
+           <span class="edition">Édition 3</span>
+           <span class="gradaa">GRADAA 2026</span>
+        </div>
+        ${headerHTML}
+      </div> 
+      
+      <div class="body"> 
+        ${bodyHTML}
+      </div> 
+      
+      <div class="footer"> 
+        <div class="date">04 OCTOBRE 2026</div> 
+        <div class="place">Salle de conférence de la grande mosquée d’Anyama</div> 
+      </div> 
+    `; 
+    sheet.appendChild(badge); 
+  
+    if (isNominative && qrUrl) {
+        new QRCode(document.getElementById(`qr-${i}`), { 
+          text: qrUrl, width: 110, height: 110, 
+          colorDark: "#241E19", colorLight: "#ffffff", 
+          correctLevel: QRCode.CorrectLevel.M 
+        }); 
+    }
+  }); 
+</script> 
+  
+</body> 
+</html>

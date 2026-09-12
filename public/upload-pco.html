@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Update PCO</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+</head>
+<body>
+  <h1>Update PCO Photo</h1>
+  <button id="updateBtn">Update Now</button>
+  <div id="status"></div>
+
+  <script>
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.innerText = "Loading photo...";
+      try {
+        // Fetch the photo from assets
+        const response = await fetch('assets/pco-photo.jpg');
+        const blob = await response.blob();
+        
+        status.innerText = "Uploading to Storage...";
+        // Upload to storage
+        const storageRef = firebase.storage().ref(`events/gradaa-2026/participants/GRA-PCO0001.jpg`);
+        await storageRef.put(blob);
+        const downloadUrl = await storageRef.getDownloadURL();
+        
+        status.innerText = "Updating Firestore... " + downloadUrl;
+        
+        // Find user by registration number
+        const snap = await firebase.firestore().collection('participants')
+          .where('registrationNumber', '==', 'GRA-PCO0001')
+          .get();
+          
+        if (snap.empty) {
+          status.innerText = "ERROR: PCO GRA-PCO0001 not found in database!";
+          return;
+        }
+        
+        const docRef = snap.docs[0].ref;
+        await docRef.update({
+          photoUrl: downloadUrl
+        });
+        
+        status.innerText = "SUCCESS! Photo updated for GRA-PCO0001";
+        
+      } catch (err) {
+        status.innerText = "ERROR: " + err.message;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

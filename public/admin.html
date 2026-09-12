@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRADAA 2026 — Tableau de bord Admin | AEEMCI</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- jsPDF for receipt re-generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+  <style>
+    /* ── Admin Layout ── */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform var(--transition-base);
+    }
+
+    .sidebar__header {
+      padding: var(--space-6);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .sidebar__logo img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .sidebar__logo-text {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+    }
+
+    .sidebar__event-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-3);
+      font-size: 0.75rem;
+      color: white;
+    }
+
+    .sidebar__nav {
+      flex: 1;
+      padding: var(--space-4) 0;
+      overflow-y: auto;
+    }
+
+    .sidebar__nav-section {
+      padding: var(--space-2) var(--space-4);
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: var(--space-3);
+    }
+
+    .sidebar__nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-size: 0.9rem;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar__nav-item:hover {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .sidebar__nav-item.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-left-color: white;
+    }
+
+    .sidebar__footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar__user {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .sidebar__user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: white;
+    }
+
+    .sidebar__user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar__user-email {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Main Content ── */
+    .admin-main {
+      margin-left: 260px;
+      flex: 1;
+      min-height: 100vh;
+      background: #FFFDF9;
+    }
+
+    .admin-topbar {
+      background: white;
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .admin-topbar h2 {
+      font-size: 1.2rem;
+      color: var(--color-text);
+    }
+
+    .admin-content {
+      padding: var(--space-6);
+    }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .kpi-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .kpi-card--orange::before { background: var(--color-primary); }
+    .kpi-card--green::before { background: var(--color-secondary); }
+    .kpi-card--blue::before { background: #2563EB; }
+    .kpi-card--purple::before { background: #7C3AED; }
+
+    .kpi-card__icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-2);
+    }
+
+    .kpi-card__value {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .kpi-card--orange .kpi-card__value { color: var(--color-primary); }
+    .kpi-card--green .kpi-card__value { color: var(--color-secondary); }
+    .kpi-card--blue .kpi-card__value { color: #2563EB; }
+    .kpi-card--purple .kpi-card__value { color: #7C3AED; }
+
+    .kpi-card__label {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .kpi-card__sub {
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+      margin-top: var(--space-1);
+    }
+
+    /* ── Charts ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+    }
+
+    .chart-card__title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--color-text);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* ── Participants Table ── */
+    .table-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .table-toolbar__title {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .table-toolbar__controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: var(--space-2) var(--space-3);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      outline: none;
+      width: 220px;
+      transition: border-color var(--transition-fast);
+    }
+
+    .search-input:focus {
+      border-color: var(--color-primary);
+    }
+
+    .filter-select {
+      padding: var(--space-2) var(--space-3);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      outline: none;
+      background: white;
+      cursor: pointer;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .data-table th {
+      background: #F9FAFB;
+      padding: var(--space-3) var(--space-4);
+      text-align: left;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .data-table td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid #F9FAFB;
+      color: var(--color-text);
+    }
+
+    .data-table tr:hover td {
+      background: #FAFAFA;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+    }
+
+    .table-pagination {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ── QR Code Section ── */
+    .qr-section {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      text-align: center;
+    }
+
+    /* ── Mobile Sidebar Toggle ── */
+    .sidebar-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--color-text);
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .admin-main {
+        margin-left: 0;
+      }
+      .sidebar-toggle {
+        display: block;
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .admin-content {
+        padding: var(--space-4);
+      }
+    }
+
+    /* ── NEW PREMIUM FEATURES STYLES ── */
+    .trend-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .trend-badge.positive { background: #DCFCE7; color: #16A34A; }
+    .trend-badge.neutral { background: #F3F4F6; color: #6B7280; }
+
+    .global-search-container {
+      position: relative;
+    }
+    .global-search-input {
+      padding: 8px 12px 8px 36px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      width: 250px;
+      outline: none;
+      transition: all var(--transition-fast);
+      background: #F9FAFB url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%239CA3AF" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 12px center;
+    }
+    .global-search-input:focus {
+      border-color: var(--color-primary);
+      width: 300px;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+    .search-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      margin-top: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+    .search-suggestion-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .search-suggestion-item:hover {
+      background: #FFF7ED;
+    }
+    .search-suggestion-item:last-child {
+      border-bottom: none;
+    }
+    .search-suggestion-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--color-text);
+    }
+    .search-suggestion-sub {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(2px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    .modal-content {
+      background: white;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #F9FAFB;
+    }
+    .modal-header h3 { margin: 0; font-size: 1.1rem; }
+    .modal-close {
+      background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--color-text-muted);
+    }
+    .modal-body {
+      padding: var(--space-5);
+    }
+    .modal-actions {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+      background: #F9FAFB;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navigation administrateur">
+    <div class="sidebar__header">
+      <div class="sidebar__logo">
+        <img src="assets/logo-aeemci.png" alt="AEEMCI" onerror="this.style.display='none'" />
+        <span class="sidebar__logo-text">GRADAA Admin</span>
+      </div>
+      <div class="sidebar__event-badge">📅 27 septembre 2026</div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="sidebar__nav-section">Principal</div>
+      <button class="sidebar__nav-item active" data-section="overview" id="nav-overview">
+        📊 Vue d'ensemble
+      </button>
+      <button class="sidebar__nav-item" data-section="participants" id="nav-participants">
+        👥 Participants
+      </button>
+      <button class="sidebar__nav-item" data-section="checkin" id="nav-checkin">
+        ✅ Check-in
+      </button>
+      <button class="sidebar__nav-item" data-section="finance" id="nav-finance">
+        💰 Finances & CO
+      </button>
+
+      <div class="sidebar__nav-section">Outils</div>
+      <button class="sidebar__nav-item" data-section="badges" id="nav-badges">
+        🪪 Badges
+      </button>
+      <button class="sidebar__nav-item" data-section="qrcode" id="nav-qrcode">
+        🔲 QR Code d'accès
+      </button>
+      <button class="sidebar__nav-item" data-section="export" id="nav-export">
+        📥 Export données
+      </button>
+
+      <div class="sidebar__nav-section" id="nav-admin-section">Administration</div>
+      <button class="sidebar__nav-item" data-section="roles" id="nav-roles">
+        🛡️ Gestion des rôles
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__user">
+        <div class="sidebar__user-avatar" id="user-avatar">A</div>
+        <div class="sidebar__user-info">
+          <div style="font-size:0.85rem;color:white;font-weight:600;">Administrateur</div>
+          <div class="sidebar__user-email" id="user-email">—</div>
+        </div>
+      </div>
+      <button id="btn-logout" class="btn btn--ghost btn--sm btn--full" style="color:#9CA3AF;border-color:rgba(255,255,255,0.1);">
+        🚪 Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <main class="admin-main" role="main">
+
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:var(--space-4);">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">☰</button>
+        <h2 id="page-title">📊 Vue d'ensemble</h2>
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-4);">
+        <div class="global-search-container">
+          <input type="text" id="global-search-input" class="global-search-input" placeholder="Chercher un participant..." autocomplete="off">
+          <div id="global-search-suggestions" class="search-suggestions"></div>
+        </div>
+        <div id="realtime-indicator" style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--color-secondary);">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--color-secondary);display:inline-block;animation:pulse 2s ease infinite;"></span>
+          Temps réel
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" style="text-align:center;padding:var(--space-12);">
+        <span class="spinner spinner--dark" style="width:40px;height:40px;border-width:3px;"></span>
+        <p style="margin-top:var(--space-4);color:var(--color-text-muted);">Chargement des données…</p>
+      </div>
+
+      <!-- ── SECTION: Overview ── -->
+      <section id="section-overview" class="section-content" style="display:none;">
+        
+        <!-- Alerts Banner -->
+        <div id="alert-email-failed" class="alert alert--error" style="display:none; margin-bottom: var(--space-4); align-items: center; justify-content: space-between;">
+          <div style="display:flex; align-items:center; gap:var(--space-2);">
+            <span>⚠️</span>
+            <span id="alert-email-failed-text">Des emails sont en erreur.</span>
+          </div>
+          <button id="btn-alert-resend" class="btn btn--sm btn--primary">Renvoyer maintenant</button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--orange">
+            <div class="kpi-card__icon">👥</div>
+            <div class="kpi-card__value" id="kpi-total">—</div>
+            <div class="kpi-card__label">Total inscrits</div>
+            <div class="kpi-card__sub" id="kpi-total-sub">
+              Mise à jour en temps réel
+              <span id="kpi-total-trend" class="trend-badge" style="display:none;"></span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-card__icon">✅</div>
+            <div class="kpi-card__value" id="kpi-checkedin">—</div>
+            <div class="kpi-card__label">Présents (Jour J)</div>
+            <div class="kpi-card__sub" id="kpi-checkedin-sub">
+              Check-in validé
+            </div>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <div class="kpi-card__icon">📊</div>
+            <div class="kpi-card__value" id="kpi-rate">—%</div>
+            <div class="kpi-card__label">Taux de présence</div>
+            <div class="kpi-card__sub">Présents / Inscrits</div>
+          </div>
+          <div class="kpi-card kpi-card--purple">
+            <div class="kpi-card__icon">📧</div>
+            <div class="kpi-card__value" id="kpi-emails">—</div>
+            <div class="kpi-card__label">Emails envoyés</div>
+            <div class="kpi-card__sub" id="kpi-emails-sub">Reçus confirmés</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card__title" style="justify-content: space-between;">
+              <span>📈 Évolution des inscriptions</span>
+              <button class="btn btn--sm btn--ghost" onclick="exportChart('chart-registrations')" title="Télécharger l'image" style="padding:4px; font-size:1rem;">📥</button>
+            </div>
+            <canvas id="chart-registrations" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title" style="justify-content: space-between;">
+              <span>🏟️ Répartition sous-comités</span>
+              <button class="btn btn--sm btn--ghost" onclick="exportChart('chart-subcommittees')" title="Télécharger l'image" style="padding:4px; font-size:1rem;">📥</button>
+            </div>
+            <canvas id="chart-subcommittees" height="200"></canvas>
+          </div>
+        </div>
+        
+        <div class="charts-grid" style="grid-template-columns: 1fr;">
+          <div class="chart-card">
+            <div class="chart-card__title" style="justify-content: space-between;">
+              <span>💼 Top 10 des Professions</span>
+              <button class="btn btn--sm btn--ghost" onclick="exportChart('chart-professions')" title="Télécharger l'image" style="padding:4px; font-size:1rem;">📥</button>
+            </div>
+            <canvas id="chart-professions" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent registrations -->
+        <div class="table-card">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">🕐 Dernières inscriptions</span>
+          </div>
+          <div id="recent-table-wrapper">
+            <table class="data-table" id="recent-table">
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Nom</th>
+                  <th>Email</th>
+                  <th>Sous-comité</th>
+                  <th>Date</th>
+                  <th>Check-in</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Participants ── -->
+      <section id="section-participants" class="section-content" style="display:none;">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">👥 Liste des participants</span>
+            <div class="table-toolbar__controls">
+              <input
+                type="search"
+                id="search-input"
+                class="search-input"
+                placeholder="🔍 Rechercher…"
+                aria-label="Rechercher un participant"
+              />
+              <select id="filter-subcommittee" class="filter-select" aria-label="Filtrer par sous-comité">
+                <option value="">Tous les sous-comités</option>
+                <option value="Anyama 1">Anyama 1</option>
+                <option value="Anyama 2">Anyama 2</option>
+                <option value="none">Non renseigné</option>
+              </select>
+              <select id="filter-checkin" class="filter-select" aria-label="Filtrer par check-in">
+                <option value="">Tous</option>
+                <option value="true">Présents</option>
+                <option value="false">Absents</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="participants-table">
+              <thead>
+                <tr>
+                  <th>N° Inscr.</th>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>Email</th>
+                  <th>Téléphone</th>
+                  <th>Sous-comité</th>
+                  <th>Check-in</th>
+                  <th>Email envoyé</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="participants-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-pagination">
+            <span id="pagination-info">— participants</span>
+            <div style="display:flex;gap:var(--space-2);">
+              <button id="btn-prev" class="btn btn--ghost btn--sm">← Préc.</button>
+              <button id="btn-next" class="btn btn--ghost btn--sm">Suiv. ←’</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Check-in ── -->
+      <section id="section-checkin" class="section-content" style="display:none;">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--orange">
+            <div class="kpi-card__icon">📋</div>
+            <div class="kpi-card__value" id="ci-total">—</div>
+            <div class="kpi-card__label">Total inscrits</div>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-card__icon">✅</div>
+            <div class="kpi-card__value" id="ci-present">—</div>
+            <div class="kpi-card__label">Présents</div>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <div class="kpi-card__icon">⏳</div>
+            <div class="kpi-card__value" id="ci-absent">—</div>
+            <div class="kpi-card__label">Non encore arrivés</div>
+          </div>
+          <div class="kpi-card kpi-card--purple">
+            <div class="kpi-card__icon">📈</div>
+            <div class="kpi-card__value" id="ci-rate">—%</div>
+            <div class="kpi-card__label">Taux de présence</div>
+          </div>
+        </div>
+        <div class="chart-card" style="max-width:400px;">
+          <div class="chart-card__title">Présence en temps réel</div>
+          <canvas id="chart-presence" height="250"></canvas>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Finances & CO ── -->
+      <section id="section-finance" class="section-content" style="display:none;">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--orange">
+            <div class="kpi-card__icon">💰</div>
+            <div class="kpi-card__value" id="kpi-finance-total">0 F</div>
+            <div class="kpi-card__label">Total Collecté</div>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-card__icon">👥</div>
+            <div class="kpi-card__value" id="kpi-co-total">0</div>
+            <div class="kpi-card__label">Membres CO Inscrits</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">💼 Répartition par Commission</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Commission</th>
+                  <th>Membres Inscrits</th>
+                  <th>Montant Collecté</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="finance-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card" style="margin-top: var(--space-6);">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">⏳ Paiements en attente de validation</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Inscr.</th>
+                  <th>Participant</th>
+                  <th>Commission</th>
+                  <th>Montant</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="finance-pending-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: QR Code ── -->
+      <section id="section-qrcode" class="section-content" style="display:none;">
+        <div class="qr-section" style="max-width:480px;margin:0 auto;">
+          <h2 style="margin-bottom:var(--space-4);">🔲 QR Code Check-in</h2>
+          <p style="color:var(--color-text-muted);margin-bottom:var(--space-6);">
+            Imprimez ce QR code sur le panneau à l'entrée de la salle. Les participants le scanneront avec leur smartphone pour accéder à la page de check-in.
+          </p>
+
+          <div id="qr-code-container" style="display:inline-block;padding:var(--space-4);background:white;border:2px solid var(--color-border);border-radius:var(--radius-lg);margin-bottom:var(--space-4);"></div>
+
+          <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-5);font-size:0.85rem;">
+            <strong>URL :</strong> <span id="qr-url" style="color:var(--color-primary);word-break:break-all;"></span>
+          </div>
+
+          <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap;">
+            <button id="btn-download-qr" class="btn btn--primary">
+              ⬇️ Télécharger le QR Code
+            </button>
+            <button id="btn-print-qr" class="btn btn--outline">
+              🖨️ Imprimer
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Badges ── -->
+      <section id="section-badges" class="section-content" style="display:none;">
+        <div class="table-card">
+          <div class="table-card__header">
+            <h3>Génération de Badges (Format A4)</h3>
+            <p style="font-size:0.85rem;color:var(--color-text-muted);margin-top:4px;">Imprimez les badges pour le jour de l'événement. (Style officiel avec photo et QR code).</p>
+          </div>
+          <div style="padding:var(--space-4); display:flex; flex-wrap:wrap; gap:var(--space-4);">
+            <div style="background:#FFF7ED; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #FFEDD5; flex:1; min-width:300px;">
+              <h4 style="color:var(--color-primaryDark); margin-bottom:var(--space-3);">👥 Badges Participants</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère une planche PDF contenant tous les badges des participants inscrits.</p>
+              <button id="btn-generate-badges-participants" class="btn btn--primary">Générer PDF (Participants)</button>
+            </div>
+            
+            <div style="background:#F3F4F6; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #E5E7EB; flex:1; min-width:300px;">
+              <h4 style="color:#1F2937; margin-bottom:var(--space-3);">⭐ Badges Membres CO</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère une planche PDF (Design VIP vert) pour le staff et le comité d'organisation.</p>
+              <button id="btn-generate-badges-co" class="btn btn--outline">Générer PDF (Membres CO)</button>
+            </div>
+
+            <div style="background:#EFF6FF; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #BFDBFE; flex:1; min-width:300px;">
+              <h4 style="color:#1E3A8A; margin-bottom:var(--space-3);">👑 Badge PCO</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère le badge du Président du Comité d'Organisation (Bleu nuit).</p>
+              <button id="btn-generate-badges-pco" class="btn btn--outline" style="border-color:#1E3A8A; color:#1E3A8A;">Générer PDF (PCO)</button>
+            </div>
+
+            <div style="background:#FEF3C7; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #FDE68A; flex:1; min-width:300px;">
+              <h4 style="color:#92400E; margin-bottom:var(--space-3);">👑 Badge PRÉSIDENT</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère le badge du Président (Design or et bleu nuit, sans QR code).</p>
+              <button id="btn-generate-badges-president" class="btn btn--outline" style="border-color:#92400E; color:#92400E;">Générer PDF (Président)</button>
+            </div>
+
+            <div style="background:#F5F3F9; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #E9D5FF; flex:1; min-width:300px;">
+              <h4 style="color:#5B2A86; margin-bottom:var(--space-3);">🎤 Badges Panélistes</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère les badges génériques (Design Violet) pour les panélistes.</p>
+              <button id="btn-generate-badges-panelistes" class="btn btn--outline" style="border-color:#5B2A86; color:#5B2A86;">Générer PDF (Panélistes)</button>
+            </div>
+
+            <div style="background:#F8F9FA; padding:var(--space-4); border-radius:var(--radius-md); border:1px solid #D1D5DB; flex:1; min-width:300px;">
+              <h4 style="color:#1A1A1A; margin-bottom:var(--space-3);">📷 Badges Médias</h4>
+              <p style="font-size:0.85rem; margin-bottom:var(--space-4);">Génère les badges génériques (Design Anthracite) pour la presse.</p>
+              <button id="btn-generate-badges-medias" class="btn btn--outline" style="border-color:#1A1A1A; color:#1A1A1A;">Générer PDF (Médias)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Export ── -->
+      <section id="section-export" class="section-content" style="display:none;">
+        <div class="card" style="max-width:600px;">
+          <h2 style="margin-bottom:var(--space-4);">📥 Export des données</h2>
+
+          <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+            <div class="card card--orange">
+              <h4 style="margin-bottom:var(--space-2);">📄 Export CSV</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Exporte tous les participants avec leurs informations complètes au format CSV, compatible Excel et Google Sheets.
+              </p>
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+                <button id="btn-export-all" class="btn btn--primary">
+                  📊 Exporter tous les inscrits
+                </button>
+                <button id="btn-export-present" class="btn btn--secondary">
+                  ✅ Exporter les présents seulement
+                </button>
+              </div>
+            </div>
+
+            <div class="card card--blue">
+              <h4 style="margin-bottom:var(--space-2);">💼 Export CO & Commissions</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Exporte la liste des membres du Comité d'Organisation ayant payé leur cotisation.
+              </p>
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+                <button id="btn-export-co-all" class="btn btn--primary">
+                  📊 Exporter tous les membres CO
+                </button>
+                <select id="export-co-commission" class="filter-select" style="max-width: 200px;">
+                  <option value="">-- Choisir Commission --</option>
+                  <option value="COMMISSION ADMINISTRATION">Administration</option>
+                  <option value="COMMISSION SCIENTIFIQUE">Scientifique</option>
+                  <option value="COMMISSION COMMUNICATION ET MÉDIAS">Communication et Médias</option>
+                  <option value="COMMISSION MOBILISATION">Mobilisation</option>
+                  <option value="COMMISSION FINANCE">Finance</option>
+                  <option value="COMMISSION PROTOCOLE ET ACCUEIL">Protocole et Accueil</option>
+                  <option value="COMMISSION RESTAURATION">Restauration</option>
+                  <option value="COMMISSION LOGISTIQUE ET TRANSPORT">Logistique et Transport</option>
+                  <option value="COMMISSION HYGIÈNE">Hygiène</option>
+                  <option value="COMMISSION INFORMATIQUE">Informatique</option>
+                </select>
+                <button id="btn-export-co-commission" class="btn btn--outline">
+                  📥 Exporter cette commission
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 style="margin-bottom:var(--space-2);">📧 Emails non envoyés</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Liste des participants n'ayant pas reçu leur reçu par email.
+              </p>
+              <button id="btn-export-email-failed" class="btn btn--outline">
+                📋 Exporter la liste des emails non envoyés
+              </button>
+            </div>
+
+            <div class="card">
+              <h4 style="margin-bottom:var(--space-2);">📧 Renvoi d'emails en masse</h4>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
+                Met en file d'attente le renvoi des reçus pour tous les participants dont l'email n'a pas été envoyé.
+              </p>
+              <button id="btn-resend-all-emails" class="btn btn--outline-green">
+                🔄 Re-planifier l'envoi des emails manquants
+              </button>
+              <div id="resend-result" style="margin-top:var(--space-3);display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Gestion des rôles ── -->
+      <section id="section-roles" class="section-content" style="display:none;">
+        <div class="table-card">
+          <div class="table-card__header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3>Gestion des Rôles & Administrateurs</h3>
+              <p style="font-size:0.85rem;color:var(--color-text-muted);margin-top:4px;">Gérez les accès à la plateforme (Super Admin, PCO, Finance).</p>
+            </div>
+            <button class="btn btn--primary" id="btn-add-admin">➕ Ajouter un Administrateur</button>
+          </div>
+          
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID Utilisateur (UID)</th>
+                  <th>Rôle</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-table-body">
+                <!-- Rempli par JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+<!-- Admin Modal -->
+<div id="admin-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="admin-modal-title">Ajouter Administrateur</h3>
+      <button class="modal-close" onclick="closeAdminModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:var(--space-4);">
+        <label style="display:block;margin-bottom:var(--space-2);font-weight:600;font-size:0.9rem;">ID Utilisateur (UID Firebase Auth)</label>
+        <input type="text" id="admin-modal-uid" class="form-input" placeholder="ex: abc123def456...">
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-top:4px;">L'utilisateur doit d'abord créer un compte (via la page admin-login.html) pour générer cet UID, ou vous pouvez copier son UID depuis la console Firebase.</p>
+      </div>
+      <div style="margin-bottom:var(--space-4);">
+        <label style="display:block;margin-bottom:var(--space-2);font-weight:600;font-size:0.9rem;">Adresse Email (Optionnel)</label>
+        <input type="email" id="admin-modal-email" class="form-input" placeholder="ex: contact@exemple.com">
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:var(--space-2);font-weight:600;font-size:0.9rem;">Rôle</label>
+        <select id="admin-modal-role" class="form-input">
+          <option value="EN_ATTENTE">EN_ATTENTE (Bloqué - En attente)</option>
+          <option value="SUPER_ADMIN">SUPER_ADMIN (Accès total)</option>
+          <option value="PCO">PCO (Accès gestion sans admin)</option>
+          <option value="FINANCE">FINANCE (Dashboard + Finance uniquement)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--outline" onclick="closeAdminModal()">Annuler</button>
+      <button class="btn btn--primary" id="btn-save-admin">Enregistrer</button>
+    </div>
+  </div>
+</div>
+  </main>
+</div>
+
+<!-- Participant Modal -->
+<div id="participant-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Détails Participant</h3>
+      <button class="modal-close" onclick="closeParticipantModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <span class="badge badge--orange" style="font-size:1rem;" id="modal-reg-num">GRADA-0000</span>
+        <span id="modal-status"></span>
+      </div>
+      <table class="data-table" style="margin-bottom:0;">
+        <tbody id="modal-details-tbody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--outline" id="modal-btn-email">📧 Renvoyer Reçu</button>
+      <button class="btn btn--primary" id="modal-btn-pdf">📄 Télécharger PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;" onclick="document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').style.display='none';"></div>
+
+<script src="js/firebase-config.js?v=2.0"></script>
+<script src="js/pdf-generator.js?v=2.0"></script>
+<script src="js/badge-generator.js?v=1.0"></script>
+<script src="js/email-service.js?v=2.0"></script>
+<script src="js/qr-generator.js"></script>
+<script src="js/admin.js?v=2.2"></script>
+
+<!-- qrcode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>

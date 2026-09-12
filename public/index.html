@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRADAA 2026 — Formulaire d'inscription | AEEMCI</title>
+  <meta name="description" content="Inscrivez-vous au Grand Rassemblement des Aeemcistes d'Anyama (GRADAA) organisé par le sous-comité 1-2 Anyama de l'AEEMCI le 27 septembre 2026." />
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css?v=2" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+  <style>
+    /* ── Page-specific styles ── */
+    .registration-wrapper {
+      padding: var(--space-12) 0 var(--space-16);
+    }
+
+    .form-card {
+      background: var(--color-white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    .form-card__header {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      padding: var(--space-6) var(--space-8);
+      color: white;
+    }
+
+    .form-card__header h2 {
+      color: white;
+      font-size: 1.3rem;
+      margin-bottom: var(--space-1);
+    }
+
+    .form-card__header p {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.875rem;
+    }
+
+    .form-card__body {
+      padding: var(--space-8);
+    }
+
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-6) 0;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    .progress-steps {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-8);
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+      transition: background var(--transition-base);
+    }
+
+    .progress-step.active {
+      background: var(--color-primary);
+    }
+
+    .progress-step.done {
+      background: var(--color-secondary);
+    }
+
+    /* ── Success Screen ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: var(--space-12) var(--space-8);
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .success-screen.visible {
+      display: block;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-6);
+      font-size: 2rem;
+      animation: pulse 2s ease infinite;
+      box-shadow: var(--shadow-green);
+    }
+
+    .success-info-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      text-align: left;
+      margin: var(--space-6) 0;
+    }
+
+    .success-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    .success-info-row:last-child {
+      border-bottom: none;
+    }
+
+    .success-info-row .label {
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .success-info-row .value {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* ── Photo Upload Preview ── */
+    .photo-preview-wrapper {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .photo-preview-wrapper.visible {
+      display: flex;
+    }
+
+    .photo-preview-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--color-primary);
+      box-shadow: var(--shadow-orange);
+    }
+
+    /* ── Duplicate Warning ── */
+    .duplicate-warning {
+      display: none;
+      padding: var(--space-3) var(--space-4);
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: #9A3412;
+      margin-top: var(--space-2);
+    }
+
+    .duplicate-warning.visible {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    @media (max-width: 640px) {
+      .form-card__body {
+        padding: var(--space-5);
+      }
+      .form-card__header {
+        padding: var(--space-5);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="site-header" role="banner">
+  <div class="container">
+    <!-- Logo AEEMCI gauche -->
+    <div class="site-header__brand">
+      <img src="assets/logo-aeemci.png" alt="Logo AEEMCI" class="site-header__logo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:white;" />
+    </div>
+
+    <!-- Texte central -->
+    <div style="flex:1;text-align:center;padding:0 var(--space-3);">
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:1rem;color:white;line-height:1.2;">AEEMCI</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.9);font-weight:500;line-height:1.3;">Association des Élèves et Étudiants Musulmans de Côte d'Ivoire</div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.95);font-weight:700;margin-top:2px;">Secteur / Abidjan Nord</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.9);font-weight:600;">Sous-comité 1 ET 2 d'Anyama</div>
+    </div>
+
+    <!-- Logo GRADAA droite -->
+    <div style="display:flex;align-items:center;">
+      <img src="assets/logo-gradaa.png" alt="Logo GRADAA" style="height:60px;width:auto;object-fit:contain;background:white;border-radius:8px;padding:2px;" />
+    </div>
+  </div>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <!-- Logo GRADAA officiel -->
+    <img src="assets/logo-gradaa.png" alt="GRADAA Édition 3" class="hero__logo" style="width:180px;height:auto;margin:0 auto var(--space-4);" onerror="this.style.display='none'" />
+    <div class="hero__badge">🕌 AEEMCI — Anyama</div>
+    <h1 class="hero__title" id="hero-title">
+      <span>GRADAA</span> 2026
+    </h1>
+    <p class="hero__subtitle">
+      Grand Rassemblement des Aeemcistes d'Anyama
+    </p>
+    <div class="hero__date-badge" role="complementary" aria-label="Date de l'événement">
+      <div class="date-item">
+        <div class="date-number">04</div>
+        <div class="date-label">Jour</div>
+      </div>
+      <div class="date-sep"></div>
+      <div class="date-item">
+        <div class="date-number" style="font-size:1.2rem;">Oct.</div>
+        <div class="date-label">Mois</div>
+      </div>
+      <div class="date-sep"></div>
+      <div class="date-item">
+        <div class="date-number">2026</div>
+        <div class="date-label">Année</div>
+      </div>
+    </div>
+    <p style="color:var(--color-secondary);font-size:0.9rem;font-weight:600;">📍 Anyama, Côte d'Ivoire &nbsp;|&nbsp; Inscription gratuite</p>
+  </div>
+</section>
+
+<!-- ── Registration Form ── -->
+<main class="registration-wrapper" id="main-content">
+  <div class="container container--narrow">
+
+    <!-- Success Message -->
+    <div id="success-screen" class="form-card success-screen" role="status" aria-live="polite">
+      <div class="success-icon">✓</div>
+      <h2 style="color:var(--color-secondary);margin-bottom:var(--space-3);">Inscription réussie !</h2>
+      <p style="color:var(--color-text-muted);margin-bottom:var(--space-4);">
+        Votre inscription au GRADAA 2026 a été enregistrée. Votre numéro de participant est :
+      </p>
+      <p id="registration-number" style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:var(--color-primary);"></p>
+
+      <div class="success-info-card">
+        <div class="success-info-row">
+          <span class="label">Nom complet</span>
+          <span class="value" id="s-name"></span>
+        </div>
+        <div class="success-info-row">
+          <span class="label">Email</span>
+          <span class="value" id="s-email"></span>
+        </div>
+        <div class="success-info-row">
+          <span class="label">Téléphone</span>
+          <span class="value" id="s-phone"></span>
+        </div>
+        <div class="success-info-row">
+          <span class="label">Sous-comité</span>
+          <span class="value" id="s-subcommittee"></span>
+        </div>
+        <div class="success-info-row">
+          <span class="label">Date de l'activité</span>
+          <span class="value">4 octobre 2026</span>
+        </div>
+      </div>
+
+      <div class="alert alert--info" style="text-align:left;margin-bottom:var(--space-4);">
+        <span class="alert__icon">📧</span>
+        <span>Un reçu PDF a été envoyé à votre adresse email. Vérifiez vos spams si vous ne le recevez pas.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+        <button id="btn-download-receipt" class="btn btn--primary btn--lg">
+          ⬇️ Télécharger mon reçu PDF
+        </button>
+        <button id="btn-resend-email" class="btn btn--outline">
+          📧 Renvoyer le reçu par email
+        </button>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="form-wrapper" class="form-card">
+      <div class="form-card__header">
+        <h2>📝 Formulaire d'inscription</h2>
+        <p>Remplissez le formulaire ci-dessous pour vous inscrire au GRADAA 2026</p>
+      </div>
+      <div class="form-card__body">
+
+        <!-- Progress Bar -->
+        <div class="progress-steps" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="2" aria-label="Étape 1 sur 2">
+          <div class="progress-step active" id="step-1"></div>
+          <div class="progress-step" id="step-2"></div>
+        </div>
+
+        <!-- Global Alert -->
+        <div id="form-alert" role="alert" style="display:none;margin-bottom:var(--space-4);"></div>
+
+        <form id="registration-form" novalidate>
+
+          <!-- SECTION 1: Informations personnelles obligatoires -->
+          <div class="section-divider">👤 Informations personnelles</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="lastName">
+                Nom <span class="required" aria-label="requis">*</span>
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                class="form-control"
+                placeholder="Ex: KONÉ"
+                autocomplete="family-name"
+                required
+                aria-required="true"
+              />
+              <div class="form-error" id="lastName-error" role="alert" aria-live="polite" style="display:none;"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="firstName">
+                Prénom <span class="required" aria-label="requis">*</span>
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                class="form-control"
+                placeholder="Ex: Amidou"
+                autocomplete="given-name"
+                required
+                aria-required="true"
+              />
+              <div class="form-error" id="firstName-error" role="alert" aria-live="polite" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">
+              Adresse email <span class="required" aria-label="requis">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-control"
+              placeholder="Ex: amidou.kone@gmail.com"
+              autocomplete="email"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="email-error" role="alert" aria-live="polite" style="display:none;"></div>
+            <div class="duplicate-warning" id="email-duplicate">
+              ⚠️ Un participant avec cet email est déjà inscrit.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              Contact téléphonique <span class="required" aria-label="requis">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="form-control"
+              placeholder="Ex: +225 07 00 00 00 00"
+              autocomplete="tel"
+              required
+              aria-required="true"
+            />
+            <div class="form-hint">Format : +225 XX XX XX XX XX (Côte d'Ivoire)</div>
+            <div class="form-error" id="phone-error" role="alert" aria-live="polite" style="display:none;"></div>
+            <div class="duplicate-warning" id="phone-duplicate">
+              ⚠️ Un participant avec ce numéro de téléphone est déjà inscrit.
+            </div>
+          </div>
+
+          <!-- SECTION 2: Informations complémentaires (facultatif) -->
+          <div class="section-divider">ℹ️ Informations complémentaires <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--color-text-light)">(facultatif)</span></div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="subCommittee">
+                Sous-comité <span class="optional">(facultatif)</span>
+              </label>
+              <select id="subCommittee" name="subCommittee" class="form-control" aria-required="false">
+                <option value="">— Sélectionner —</option>
+                <option value="Anyama 1">Anyama 1</option>
+                <option value="Anyama 2">Anyama 2</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="profession">
+                Profession <span class="optional">(facultatif)</span>
+              </label>
+              <input
+                type="text"
+                id="profession"
+                name="profession"
+                class="form-control"
+                placeholder="Ex: Enseignant, Médecin…"
+                autocomplete="organization-title"
+              />
+            </div>
+          </div>
+
+          <!-- SECTION 3: Photo de profil -->
+          <div class="section-divider">📸 Photo de profil <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--color-text-light)">(facultatif)</span></div>
+
+          <div class="form-group">
+            <label class="form-label" for="photo">Photo de profil</label>
+            <div class="file-upload" id="photo-drop-zone">
+              <input type="file" id="photo" name="photo" accept="image/*" aria-label="Choisir une photo de profil" />
+              <div id="photo-placeholder">
+                <div class="file-upload__icon">📷</div>
+                <div class="file-upload__text">Glissez votre photo ici</div>
+                <div class="file-upload__hint">ou cliquez pour parcourir — JPG, PNG, max 5MB</div>
+              </div>
+              <div class="photo-preview-wrapper" id="photo-preview-wrapper">
+                <img id="photo-preview-img" class="photo-preview-img" src="" alt="Aperçu de la photo de profil" />
+                <span style="font-size:0.85rem;color:var(--color-text-muted);" id="photo-filename"></span>
+                <button type="button" id="btn-remove-photo" class="btn btn--ghost btn--sm">✕ Supprimer</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div style="margin-top:var(--space-8);">
+            <button type="submit" id="btn-submit" class="btn btn--primary btn--full btn--lg">
+              <span id="btn-submit-text">✅ Confirmer mon inscription</span>
+              <span id="btn-submit-spinner" class="spinner" style="display:none;"></span>
+            </button>
+            <p style="text-align:center;margin-top:var(--space-3);font-size:0.8rem;color:var(--color-text-muted);">
+              🔒 Vos données sont sécurisées et utilisées uniquement pour cet événement.
+            </p>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Footer ── -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <p>
+      <strong style="color:var(--color-primary);">GRADAA 2026</strong> — Grand Rassemblement des Aeemcistes d'Anyama
+    </p>
+    <hr class="site-footer__divider" />
+    <p>Organisé par le <strong>Sous-comité 1-2 Anyama de l'AEEMCI</strong></p>
+    <p style="margin-top:var(--space-2);">
+      Association des Élèves et Étudiants Musulmans de Côte d'Ivoire
+    </p>
+  </div>
+</footer>
+
+<!-- ── Toast Container ── -->
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ── Receipt Template (hidden, used for PDF) ── -->
+<div id="receipt-template" style="display:none;">
+  <div id="receipt-content" style="
+    width: 595px;
+    min-height: 842px;
+    background: #fff;
+    font-family: 'Inter', Arial, sans-serif;
+    padding: 40px;
+    box-sizing: border-box;
+  ">
+    <!-- Receipt HTML is dynamically generated by pdf-generator.js -->
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/firebase-config.js?v=2"></script>
+<script src="js/pdf-generator.js?v=2"></script>
+<script src="js/email-service.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
+</body>
+</html>

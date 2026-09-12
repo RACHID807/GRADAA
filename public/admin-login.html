@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRADAA 2026 — Connexion Administrateur | AEEMCI</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+
+  <style>
+    body {
+      background: linear-gradient(160deg, #FFF7ED 0%, #FFFFFF 45%, #F0FDF4 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+    }
+
+    .login-card__header {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      padding: var(--space-8);
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      margin: 0 auto var(--space-3);
+      filter: brightness(0) invert(1);
+    }
+
+    .login-card__header h1 {
+      color: white;
+      font-size: 1.4rem;
+      margin-bottom: var(--space-1);
+    }
+
+    .login-card__header p {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.85rem;
+    }
+
+    .login-card__body {
+      padding: var(--space-8);
+    }
+
+    .show-password-btn {
+      position: absolute;
+      right: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--color-text-muted);
+      padding: var(--space-1);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card" role="main">
+  <div class="login-card__header">
+    <img src="assets/logo-aeemci.png" alt="AEEMCI" class="login-logo" onerror="this.style.display='none'" />
+    <h1>🔒 Espace Administrateur</h1>
+    <p>GRADAA 2026 — Tableau de bord</p>
+  </div>
+
+  <div class="login-card__body">
+    <div id="login-alert" role="alert" style="display:none;margin-bottom:var(--space-4);"></div>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="admin-email">Email administrateur</label>
+        <input
+          type="email"
+          id="admin-email"
+          class="form-control"
+          placeholder="admin@aeemci.ci"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="admin-password">Mot de passe</label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            id="admin-password"
+            class="form-control"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+            style="padding-right: 3rem;"
+          />
+          <button type="button" class="show-password-btn" id="toggle-password" aria-label="Afficher/masquer le mot de passe">
+            👁
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-login" class="btn btn--primary btn--full btn--lg" style="margin-top:var(--space-2);">
+        <span id="login-text">🔓 Connexion</span>
+        <span id="login-spinner" class="spinner" style="display:none;"></span>
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:var(--space-6);font-size:0.8rem;color:var(--color-text-muted);">
+      Accès réservé aux administrateurs AEEMCI.<br />
+      <a href="index.html" style="color:var(--color-primary);">← Retour au formulaire d'inscription</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/firebase-config.js"></script>
+<script>
+'use strict';
+
+document.addEventListener('DOMContentLoaded', () => {  const { auth, db } = window.GRADAA;
+
+  // Redirect if already logged in and is admin
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const adminDoc = await db.collection('admins').doc(user.uid).get();
+      if (adminDoc.exists) {
+        window.location.href = 'admin.html';
+      }
+    }
+  });
+
+  // Toggle password visibility
+  document.getElementById('toggle-password').addEventListener('click', () => {
+    const input = document.getElementById('admin-password');
+    const btn = document.getElementById('toggle-password');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  });
+
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('login-alert');
+    const icons = { error: '❌', warning: '⚠️', success: '✅' };
+    el.innerHTML = `<div class="alert alert--${type}"><span class="alert__icon">${icons[type]||'ℹ️'}</span><span>${msg}</span></div>`;
+    el.style.display = 'block';
+  }
+
+  function setLoading(loading) {
+    const btn = document.getElementById('btn-login');
+    const text = document.getElementById('login-text');
+    const spinner = document.getElementById('login-spinner');
+    btn.disabled = loading;
+    text.textContent = loading ? 'Connexion…' : '🔓 Connexion';
+    spinner.style.display = loading ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value.trim();
+    const password = document.getElementById('admin-password').value;
+
+    if (!email || !password) {
+      showAlert('Veuillez remplir tous les champs.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const credential = await auth.signInWithEmailAndPassword(email, password);
+
+      // Verify admin role in Firestore
+      const adminDoc = await db.collection('admins').doc(credential.user.uid).get();
+      if (!adminDoc.exists) {
+        await auth.signOut();
+        showAlert('Accès refusé. Vous n\'êtes pas administrateur GRADAA.');
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = 'admin.html';
+    } catch (err) {
+      setLoading(false);
+      const errorMessages = {
+        'auth/user-not-found': 'Aucun compte administrateur trouvé avec cet email.',
+        'auth/wrong-password': 'Mot de passe incorrect.',
+        'auth/invalid-email': 'Adresse email invalide.',
+        'auth/too-many-requests': 'Trop de tentatives. Réessayez dans quelques minutes.',
+        'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion.',
+      };
+      showAlert(errorMessages[err.code] || `Erreur: ${err.message}`);
+    }
+  });
+});
+</script>
+</body>
+</html>

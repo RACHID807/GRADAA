@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badge PRÉSIDENT (Générique) - GRADAA 2026</title>
+<style>
+  :root {
+    --cream:         #FFF6EA;
+    --charcoal:      #241E19;
+    --paper:         #FFFFFF;
+    
+    /* THEME PRESIDENT (Bleu Nuit & Or) */
+    --t-pres-bg: linear-gradient(135deg, #091734, #122B5E 60%, #1E4491);
+    --t-pres-pill: #FBAE5C;
+    --t-pres-text: #091734;
+    --t-pres-foot: #091734;
+  }
+ 
+  * { box-sizing: border-box; }
+ 
+  html, body {
+    margin: 0;
+    background: #DCD5C8;
+    font-family: 'Inter', -apple-system, "Segoe UI", sans-serif;
+    color: var(--charcoal);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+ 
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+ 
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    max-width: 450px; margin: 24px auto 20px; padding: 16px 20px;
+    background: var(--paper); border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    text-align: center;
+  }
+  .toolbar h1 {
+    font-family: 'Poppins', sans-serif; font-size: 19px;
+    margin: 0 0 6px; color: var(--t-pres-text);
+  }
+  .toolbar button {
+    margin-top: 10px; background: var(--t-pres-text); color: #fff;
+    border: none; padding: 10px 18px; border-radius: 8px;
+    font-weight: 600; cursor: pointer;
+  }
+ 
+  /* ---------- sheet layout ---------- */
+  .sheet {
+    display: flex; justify-content: center; margin-bottom: 60px;
+  }
+ 
+  /* ---------- badge PRESIDENT ---------- */
+  .badge {
+    position: relative;
+    width: 336px; height: 528px;
+    background: var(--paper); border-radius: 18px;
+    overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,.16);
+    display: flex; flex-direction: column;
+  }
+ 
+  .hole-wrap {
+    position: absolute; top: 12px; left: 0; right: 0;
+    display: flex; justify-content: center; z-index: 5;
+  }
+  .hole {
+    width: 34px; height: 10px; background: #DCD5C8;
+    border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
+  }
+ 
+  /* EN-TÊTE COLORÉ */
+  .header {
+    background: var(--t-pres-bg);
+    padding: 26px 14px 10px;
+    text-align: center; color: #fff; position: relative;
+  }
+ 
+  /* LOGOS */
+  .logo-row {
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+  }
+  .logo-banner {
+    height: 48px; flex: 1; background: #fff;
+    border-radius: 8px; padding: 4px; margin: 0;
+    box-shadow: 0 3px 10px rgba(0,0,0,.15);
+  }
+  .logo-banner img { width: 100%; height: 100%; object-fit: contain; }
+ 
+  .event-title-box {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .edition {
+    font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 9.5px;
+    color: #5B2A86; background: #fff; padding: 1px 10px;
+    border-radius: 20px; transform: rotate(-3deg);
+  }
+  .gradaa {
+    font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 23px;
+    letter-spacing: .5px; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+ 
+  /* PILLULE STATUT */
+  .role-strip {
+    margin-top: -10px; position: relative; z-index: 10;
+    display: inline-block; border-radius: 20px; padding: 5px 18px;
+    font-size: 13px; font-weight: 900; letter-spacing: 1px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-transform: uppercase;
+    background: var(--t-pres-pill); color: var(--t-pres-text);
+  }
+ 
+  /* CORPS DU BADGE (Générique) */
+  .body {
+    flex: 1; background: var(--cream); padding: 16px 14px 10px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+ 
+  /* STYLE SPÉCIFIQUE GÉNÉRIQUE */
+  .generic-title {
+    font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 34px;
+    margin: auto 0; line-height: 1.2; text-transform: uppercase;
+    color: var(--t-pres-text);
+  }
+  .generic-sub { 
+    font-size: 13px; font-weight: 600; color: #666; margin-bottom: 4px;
+  }
+ 
+  /* FOOTER */
+  .footer { 
+    background: var(--t-pres-foot); color: #fff; 
+    text-align: center; padding: 10px 14px; 
+  }
+  .footer .date { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .3px; }
+  .footer .place { font-size: 9.5px; font-weight: 500; opacity: .9; margin-top: 2px; }
+ 
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .sheet { margin: 0; }
+    .badge { box-shadow: none; border: 1px dashed #bbb; margin: 14px; }
+    @page { margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+ 
+  <div class="toolbar">
+    <h1>Badge PRÉSIDENT (Générique)</h1>
+    <p style="font-size: 12px; margin-bottom: 10px; color: #666;">Modèle sans photo ni QR code, centré sur la fonction.</p>
+    <button onclick="window.print()">Imprimer ce badge</button>
+  </div>
+ 
+  <div class="sheet">
+    <!-- LE BADGE PRÉSIDENT GÉNÉRIQUE -->
+    <div class="badge">
+      <div class="hole-wrap"><div class="hole"></div></div> 
+      
+      <!-- ENTÊTE -->
+      <div class="header"> 
+        <div class="logo-row"> 
+          <div class="logo-banner"><img src="logo_texte.png" alt="AEEMCI 50 Ans" onerror="this.src='https://api.dicebear.com/9.x/initials/svg?seed=AEEMCI&backgroundColor=ffffff&textColor=0B4628'"></div>
+        </div> 
+        <div class="event-title-box">
+           <span class="edition">Édition 3</span>
+           <span class="gradaa">GRADAA 2026</span>
+        </div>
+        <!-- Espace vide à la place de la photo pour les badges génériques -->
+        <div style="height: 10px;"></div>
+      </div> 
+      
+      <!-- CORPS (Générique) -->
+      <div class="body"> 
+        <div class="role-strip">PRÉSIDENT</div> 
+        
+        <div style="margin: auto 0;">
+           <div class="generic-sub">Accès Autorisé</div>
+           <div class="generic-title">PRÉSIDENT</div>
+        </div>
+      </div> 
+      
+      <!-- FOOTER -->
+      <div class="footer"> 
+        <div class="date">04 OCTOBRE 2026</div> 
+        <div class="place">Salle de conférence de la grande mosquée d’Anyama</div> 
+      </div> 
+    </div>
+  </div>
+ 
+</body> 
+</html>

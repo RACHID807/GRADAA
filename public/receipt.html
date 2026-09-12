@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRADAA 2026 — Télécharger mon reçu | AEEMCI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+  <style>
+    .receipt-wrapper {
+      min-height: calc(100vh - 72px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) var(--space-4);
+      background: linear-gradient(160deg, #FFF7ED 0%, #FFFFFF 50%, #F0FDF4 100%);
+    }
+
+    .receipt-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+    }
+
+    .receipt-card__header {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      padding: var(--space-6) var(--space-8);
+      color: white;
+      text-align: center;
+    }
+
+    .receipt-card__body { padding: var(--space-8); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header" role="banner">
+  <div class="container">
+    <!-- Logo AEEMCI gauche -->
+    <div class="site-header__brand">
+      <img src="assets/logo-aeemci.png" alt="Logo AEEMCI" class="site-header__logo" style="width:64px;height:64px;border-radius:50%;" onerror="this.style.display='none'" />
+    </div>
+
+    <!-- Texte central -->
+    <div style="flex:1;text-align:center;padding:0 var(--space-3);">
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:1rem;color:white;line-height:1.2;">AEEMCI</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.9);font-weight:500;line-height:1.3;">Association des Élèves et Étudiants Musulmans de Côte d'Ivoire</div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.95);font-weight:700;margin-top:2px;">Secteur / Abidjan Nord</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.9);font-weight:600;">Sous-comité 1 ET 2 d'Anyama</div>
+    </div>
+
+    <!-- Logo GRADAA droite -->
+    <div style="display:flex;align-items:center;gap:var(--space-2);">
+      <img src="assets/logo-gradaa.png" alt="Logo GRADAA" style="height:60px;width:auto;object-fit:contain;" onerror="this.style.display='none'" />
+      <nav class="site-header__nav" aria-label="Navigation principale">
+        <a href="index.html" class="btn btn--outline" style="color:white;border-color:rgba(255,255,255,0.4);font-size:0.8rem;padding:var(--space-2) var(--space-3);">
+          📝 Inscription
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="receipt-wrapper" id="main-content" role="main">
+  <div class="receipt-card">
+    <div class="receipt-card__header">
+      <img src="assets/logo-aeemci.png" alt="AEEMCI" style="width:48px;height:48px;object-fit:contain;filter:brightness(0)invert(1);margin:0 auto var(--space-3);" onerror="this.style.display='none'" />
+      <h1 style="color:white;font-size:1.3rem;margin-bottom:var(--space-1);">📄 Mon reçu GRADAA 2026</h1>
+      <p style="color:rgba(255,255,255,0.8);font-size:0.85rem;">4 octobre 2026 — Anyama</p>
+    </div>
+
+    <div class="receipt-card__body">
+      <!-- Loading -->
+      <div id="state-loading" style="text-align:center;padding:var(--space-8);">
+        <span class="spinner spinner--dark" style="width:36px;height:36px;border-width:3px;"></span>
+        <p style="margin-top:var(--space-4);color:var(--color-text-muted);">Chargement de vos informations…</p>
+      </div>
+
+      <!-- Search form (if no ID in URL) -->
+      <div id="state-search" style="display:none;">
+        <h2 style="margin-bottom:var(--space-3);">🔍 Retrouver mon reçu</h2>
+        <p style="color:var(--color-text-muted);margin-bottom:var(--space-5);">Saisissez votre email ou téléphone pour retrouver votre inscription.</p>
+
+        <div id="search-alert" role="alert" style="display:none;margin-bottom:var(--space-4);"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="search-email">Email</label>
+          <input type="email" id="search-email" class="form-control" placeholder="votre@email.com" />
+        </div>
+        <div style="text-align:center;color:var(--color-text-muted);font-size:0.85rem;margin:var(--space-2) 0;">— ou —</div>
+        <div class="form-group">
+          <label class="form-label" for="search-phone">Téléphone</label>
+          <input type="tel" id="search-phone" class="form-control" placeholder="+225 07 00 00 00 00" />
+        </div>
+        <button id="btn-search" class="btn btn--primary btn--full btn--lg">
+          <span id="search-text">🔍 Rechercher</span>
+          <span id="search-spinner" class="spinner" style="display:none;"></span>
+        </button>
+      </div>
+
+      <!-- Found -->
+      <div id="state-found" style="display:none;">
+        <div style="text-align:center;margin-bottom:var(--space-6);">
+          <div style="width:64px;height:64px;background:var(--color-secondary-xlight);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-3);font-size:1.8rem;">📄</div>
+          <h2 id="found-name" style="margin-bottom:var(--space-1);"></h2>
+          <span id="found-regnum" class="badge badge--orange" style="font-size:0.9rem;"></span>
+        </div>
+
+        <div class="success-info-card" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-6);">
+          <div style="display:flex;justify-content:space-between;padding:var(--space-2) 0;border-bottom:1px solid var(--color-border);font-size:0.9rem;">
+            <span style="color:var(--color-text-muted);">Email</span>
+            <span id="found-email" style="font-weight:600;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:var(--space-2) 0;border-bottom:1px solid var(--color-border);font-size:0.9rem;">
+            <span style="color:var(--color-text-muted);">Téléphone</span>
+            <span id="found-phone" style="font-weight:600;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:var(--space-2) 0;font-size:0.9rem;">
+            <span style="color:var(--color-text-muted);">Date activité</span>
+            <span style="font-weight:600;">4 octobre 2026</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+          <button id="btn-download-found" class="btn btn--primary btn--full btn--lg">
+            ⬇️ Télécharger mon reçu PDF
+          </button>
+          <button id="btn-resend-found" class="btn btn--outline btn--full">
+            📧 Renvoyer par email
+          </button>
+          <a href="checkin.html" class="btn btn--secondary btn--full">
+            📋 Aller au check-in
+          </a>
+        </div>
+      </div>
+
+      <!-- Pending -->
+      <div id="state-pending" style="display:none;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:var(--space-4);">⏳</div>
+        <h2 style="margin-bottom:var(--space-3);">Paiement en attente</h2>
+        <p style="color:var(--color-text-muted);margin-bottom:var(--space-5);">
+          Votre paiement est en attente de validation par la commission Finance. S'il n'a pas encore été effectué, veuillez utiliser le bouton ci-dessous.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+          <a href="https://pay.wave.com/m/M_ci_PfwRIFakUd2H/c/ci/?amount=1000" target="_blank" class="btn btn--primary btn--full btn--lg">💳 Payer via Wave</a>
+          <button onclick="window.location.reload()" class="btn btn--outline btn--full">🔄 Actualiser le statut</button>
+        </div>
+      </div>
+      <!-- Not found -->
+      <div id="state-not-found" style="display:none;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:var(--space-4);">🔍</div>
+        <h2 style="margin-bottom:var(--space-3);">Aucune inscription trouvée</h2>
+        <p style="color:var(--color-text-muted);margin-bottom:var(--space-5);">
+          Vérifiez votre email ou téléphone, ou inscrivez-vous si ce n'est pas encore fait.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+          <a href="index.html" class="btn btn--primary btn--full btn--lg">📍 S'inscrire</a>
+          <button id="btn-try-again-receipt" class="btn btn--outline btn--full">🔄 Réessayer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast -->
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/pdf-generator.js"></script>
+<script src="js/email-service.js"></script>
+<script>
+'use strict';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const { db, EVENT_CONFIG } = window.GRADAA;
+  let foundParticipant = null;
+
+  function showState(name) {
+    ['loading','search','found','not-found','pending'].forEach(s => {
+      document.getElementById(`state-${s}`).style.display = 'none';
+    });
+    document.getElementById(`state-${name}`).style.display = 'block';
+  }
+
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4200);
+  }
+
+  function formatPhone(p) { return p.replace(/\s/g,'').replace(/^00/,'+'); }
+
+  // Check URL params
+  const params = new URLSearchParams(window.location.search);
+  const participantId = params.get('id');
+
+  if (participantId) {
+    loadById(participantId);
+  } else {
+    showState('search');
+  }
+
+  async function loadById(id) {
+    showState('loading');
+    try {
+      const snap = await db.collection('participants').doc(id).get();
+      if (!snap.exists) { showState('search'); return; }
+      foundParticipant = { id: snap.id, ...snap.data() };
+      showFoundState(foundParticipant);
+    } catch (err) {
+      showState('search');
+    }
+  }
+
+  async function searchParticipant(email, phone) {
+    let participant = null;
+    if (email) {
+      const snap = await db.collection('participants')
+        .where('eventId','==', EVENT_CONFIG.id)
+        .where('email','==', email)
+        .limit(1).get();
+      if (!snap.empty) participant = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    }
+    if (!participant && phone) {
+      const snap = await db.collection('participants')
+        .where('eventId','==', EVENT_CONFIG.id)
+        .where('phone','==', phone)
+        .limit(1).get();
+      if (!snap.empty) participant = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    }
+    return participant;
+  }
+
+  function showFoundState(p) {
+    if (p.paymentStatus === 'pending') {
+      showState('pending');
+      return;
+    }
+    document.getElementById('found-name').textContent = `${p.firstName} ${p.lastName}`;
+    document.getElementById('found-regnum').textContent = p.registrationNumber;
+    document.getElementById('found-email').textContent = p.email;
+    document.getElementById('found-phone').textContent = p.phone;
+    showState('found');
+  }
+
+  // Search submit
+  document.getElementById('btn-search').addEventListener('click', async () => {
+    const email = document.getElementById('search-email').value.trim().toLowerCase();
+    const phone = formatPhone(document.getElementById('search-phone').value.trim());
+    if (!email && !phone) {
+      document.getElementById('search-alert').innerHTML = `<div class="alert alert--warning"><span>⚠️ Saisissez votre email ou téléphone.</span></div>`;
+      document.getElementById('search-alert').style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('btn-search');
+    const text = document.getElementById('search-text');
+    const spinner = document.getElementById('search-spinner');
+    btn.disabled = true; text.textContent = 'Recherche…'; spinner.style.display = 'inline-block';
+
+    try {
+      const p = await searchParticipant(email, phone);
+      if (p) { foundParticipant = p; showFoundState(p); }
+      else showState('not-found');
+    } catch (err) {
+      document.getElementById('search-alert').innerHTML = `<div class="alert alert--error"><span>❌ Erreur réseau. Réessayez.</span></div>`;
+      document.getElementById('search-alert').style.display = 'block';
+    } finally {
+      btn.disabled = false; text.textContent = '🔍 Rechercher'; spinner.style.display = 'none';
+    }
+  });
+
+  // Download receipt
+  document.getElementById('btn-download-found').addEventListener('click', async () => {
+    if (!foundParticipant) return;
+    const btn = document.getElementById('btn-download-found');
+    btn.disabled = true; btn.textContent = 'Génération…';
+    try {
+      const pdfBlob = await window.GradaPDF.generate({
+        ...foundParticipant,
+        eventDate: EVENT_CONFIG.dateDisplay,
+        eventName: EVENT_CONFIG.fullName,
+        eventLocation: EVENT_CONFIG.location,
+        eventOrganizer: EVENT_CONFIG.organizer
+      });
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recu-GRADAA-2026-${foundParticipant.registrationNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Reçu téléchargé !', 'success');
+    } catch (err) { showToast('Erreur PDF.', 'error'); }
+    finally { btn.disabled = false; btn.textContent = '⬇️ Télécharger mon reçu PDF'; }
+  });
+
+  // Resend email
+  document.getElementById('btn-resend-found').addEventListener('click', async () => {
+    if (!foundParticipant) return;
+    const btn = document.getElementById('btn-resend-found');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+    try {
+      await window.GradaEmail.resendFromAdmin(foundParticipant.id);
+      showToast('Reçu mis en file d\'envoi !', 'success');
+    } catch (err) { showToast('Erreur renvoi email.', 'error'); }
+    finally { btn.disabled = false; btn.textContent = '📧 Renvoyer par email'; }
+  });
+
+  // Try again
+  document.getElementById('btn-try-again-receipt').addEventListener('click', () => showState('search'));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{"users": [
+{
+  "localId": "0cjctbzWa8gzyYQHx92GCqaHIhf2",
+  "email": "benidriss841@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "bzTvuDQrPkO7uJI91z76D4DkNSq5gv0FeoGEj7k6yNBNUsIYFsJxhbfSgUbvddNakEsmJOkIW1CvMBk69BpDrw==",
+  "salt": "hlf9//hY6pKhrw==",
+  "createdAt": "1788899924658",
+  "disabled": false,
+  "providerUserInfo": []
+}]}
