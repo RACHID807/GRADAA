@@ -33,6 +33,9 @@ service cloud.firestore {
     // ─── Events (read public, write admin) ──────────────────────────────
     match /events/{eventId} {
       allow read: if true;
+      allow update: if isValidAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount'])
+      );
       allow write: if isValidAdmin();
     }
 
@@ -43,6 +46,8 @@ service cloud.firestore {
       // Participants can read their own record via ID
       allow read: if isValidAdmin()
         || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      // Allow public to check for duplicates (list query)
+      allow list: if true;
       // Only admins can update/delete
       allow update, delete: if isValidAdmin();
       // Public can read by ID (for receipt page) - relaxed for usability
@@ -57,9 +62,9 @@ service cloud.firestore {
       allow list: if isSuperAdmin();
       
       // Allow a new user to create their own 'EN_ATTENTE' document
-      allow create: if isAuthenticated() 
+      allow create: if isSuperAdmin() || (isAuthenticated() 
         && request.auth.uid == adminId 
-        && request.resource.data.role == 'EN_ATTENTE';
+        && request.resource.data.role == 'EN_ATTENTE');
         
       // Allow self-update of email ONLY (cannot change own role)
       allow update: if (isAuthenticated() && request.auth.uid == adminId && request.resource.data.role == resource.data.role)
@@ -79,6 +84,13 @@ service cloud.firestore {
     match /config/{configId} {
       allow read: if true;
       allow write: if isValidAdmin();
+    }
+
+    // ─── Archives ───────────────────────────────────────────────────────
+    match /archives/{archiveId} {
+      allow read: if isValidAdmin();
+      allow create, update: if isValidAdmin();
+      allow delete: if isSuperAdmin() || (isAuthenticated() && resource.data.uploadedBy == request.auth.uid);
     }
   }
 }

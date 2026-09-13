@@ -5,7 +5,7 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const { db, auth, EVENT_CONFIG } = window.GRADAA;
+  const { db, auth, storage, EVENT_CONFIG } = window.GRADAA;
 
   // ── State ───────────────────────────────────────────────────
   let allParticipants = [];
@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-badges').style.display = 'none';
       document.getElementById('nav-qrcode').style.display = 'none';
       document.getElementById('nav-export').style.display = 'none';
+      const navArchives = document.getElementById('nav-archives');
+      if (navArchives) navArchives.style.display = 'none';
     } else if (currentUserRole === 'SUPER_ADMIN') {
       if (navAdminSection) navAdminSection.style.display = 'block';
       if (navRoles) navRoles.style.display = 'flex';
@@ -138,12 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
       finance: '💰 Finances & CO',
       qrcode: '🔲 QR Code d\'accès',
       export: '📥 Export des données',
+      archives: '🗄️ Archives',
       roles: '🛡️ Gestion des rôles'
     };
     document.getElementById('page-title').textContent = titles[name] || '';
 
     if (name === 'qrcode') initQRCode();
     if (name === 'checkin') updateCheckinSection();
+    if (name === 'archives') initArchives();
     if (name === 'roles' && currentUserRole === 'SUPER_ADMIN') loadAdmins();
   }
 
@@ -382,7 +386,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${statsByCommission[comm].count}</td>
           <td style="color:var(--color-primary);font-weight:700;">${statsByCommission[comm].amount.toLocaleString('fr-FR')} F</td>
           <td>
-            <button class="btn btn--outline btn--sm btn-export-specific-co" data-comm="${escapeHtml(comm)}">📥 Exporter</button>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn--outline btn--sm" onclick="viewCommissionMembers('${escapeHtml(comm).replace(/'/g, "\\'")}')">👁️ Voir</button>
+              <button class="btn btn--outline btn--sm btn-export-specific-co" data-comm="${escapeHtml(comm)}">📥 Exporter</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1145,5 +1152,184 @@ document.addEventListener('DOMContentLoaded', () => {
     a.click();
     showToast('Graphique téléchargé', 'success');
   };
+
+  // ── Archives ───────────────────────────────────────────────────
+  
+  window.viewCommissionMembers = (commName) => {
+    const modal = document.getElementById('commission-modal');
+    if (!modal) return;
+    
+    document.getElementById('commission-modal-title').textContent = 'Membres : ' + commName;
+    const tbody = document.getElementById('commission-modal-tbody');
+    
+    const members = allParticipants.filter(p => p.role === 'CO' && p.subCommittee === commName);
+    
+    if (members.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Aucun membre trouvé.</td></tr>';
+    } else {
+      tbody.innerHTML = members.map(p => `
+        <tr>
+          <td><strong>${escapeHtml(p.lastName)} ${escapeHtml(p.firstName)}</strong></td>
+          <td>${escapeHtml(p.phone)}<br><span style="font-size:0.8rem;color:var(--color-text-muted);">${escapeHtml(p.email)}</span></td>
+          <td>${p.paymentStatus === 'paid' ? '<span class="badge badge--green">Payé</span>' : '<span class="badge badge--orange">En attente</span>'}</td>
+        </tr>
+      `).join('');
+    }
+    
+    const exportBtn = document.getElementById('btn-export-commission-modal');
+    exportBtn.onclick = () => {
+      exportToCSV(members, `GRADAA-2026-CO-${commName.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0,10)}.csv`);
+      showToast(`Export de la commission généré !`, 'success');
+    };
+    
+    modal.style.display = 'flex';
+  };
+
+  window.closeCommissionModal = () => {
+    document.getElementById('commission-modal').style.display = 'none';
+  };
+
+  let allArchives = [];
+  let archivesListener = null;
+
+  function initArchives() {
+    if (archivesListener) return;
+    archivesListener = db.collection('archives').orderBy('createdAt', 'desc')
+      .onSnapshot(snapshot => {
+        allArchives = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderArchives(allArchives);
+      }, err => {
+        console.error('Error fetching archives:', err);
+        showToast('Erreur lors du chargement des archives', 'error');
+      });
+  }
+
+  function renderArchives(data) {
+    const tbody = document.getElementById('archives-table-body');
+    if (!tbody) return;
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucune archive trouvée.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(item => {
+      const canDelete = currentUserRole === 'SUPER_ADMIN' || (auth.currentUser && item.uploadedBy === auth.currentUser.uid);
+      const deleteBtnHTML = canDelete ? `<button class="btn btn--sm btn--outline-red" style="margin-left: 4px;" onclick="deleteArchive('${item.id}', '${item.fileName}')">🗑️ Supprimer</button>` : '';
+      
+      return `
+        <tr>
+          <td><strong>${escapeHtml(item.name)}</strong></td>
+          <td>${formatDate(item.createdAt)}</td>
+          <td>${escapeHtml(item.uploadedByEmail || '—')}</td>
+          <td style="text-align:right; white-space:nowrap;">
+            <a href="${item.url}" target="_blank" class="btn btn--sm btn--primary">📥 Télécharger</a>
+            ${deleteBtnHTML}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.deleteArchive = async (archiveId, fileName) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette archive ? Cette action est irréversible.')) return;
+    
+    try {
+      const archiveRef = db.collection('archives').doc(archiveId);
+      const storageRef = storage.ref('archives/' + fileName);
+      
+      // Delete from Firestore
+      await archiveRef.delete();
+      
+      // Attempt to delete from Storage (might fail if rules block or already deleted)
+      try {
+        await storageRef.delete();
+      } catch (e) {
+        console.warn('Could not delete from storage:', e);
+      }
+      
+      showToast('Archive supprimée avec succès', 'success');
+    } catch (error) {
+      console.error('Error deleting archive:', error);
+      showToast('Erreur lors de la suppression', 'error');
+    }
+  };
+
+  const archiveSearchInput = document.getElementById('archive-search-input');
+  if (archiveSearchInput) {
+    archiveSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        renderArchives(allArchives);
+        return;
+      }
+      const filtered = allArchives.filter(item => item.name.toLowerCase().includes(q));
+      renderArchives(filtered);
+    });
+  }
+
+  const btnAddArchive = document.getElementById('btn-add-archive');
+  if (btnAddArchive) {
+    btnAddArchive.addEventListener('click', () => {
+      document.getElementById('archive-modal-name').value = '';
+      document.getElementById('archive-modal-file').value = '';
+      document.getElementById('archive-upload-progress-container').style.display = 'none';
+      document.getElementById('archive-upload-progress-bar').style.width = '0%';
+      document.getElementById('archive-modal').style.display = 'flex';
+    });
+  }
+
+  window.closeArchiveModal = () => {
+    document.getElementById('archive-modal').style.display = 'none';
+  };
+
+  const btnSaveArchive = document.getElementById('btn-save-archive');
+  if (btnSaveArchive) {
+    btnSaveArchive.addEventListener('click', async () => {
+      const nameInput = document.getElementById('archive-modal-name').value.trim();
+      const fileInput = document.getElementById('archive-modal-file');
+      
+      if (!nameInput) return showToast('Veuillez entrer un nom pour le document', 'warning');
+      if (fileInput.files.length === 0) return showToast('Veuillez sélectionner un fichier', 'warning');
+      
+      const file = fileInput.files[0];
+      const fileRef = storage.ref(`archives/${Date.now()}_${file.name}`);
+      
+      const progressContainer = document.getElementById('archive-upload-progress-container');
+      const progressBar = document.getElementById('archive-upload-progress-bar');
+      progressContainer.style.display = 'block';
+      
+      const uploadTask = fileRef.put(file);
+      
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.style.width = progress + '%';
+        }, 
+        (error) => {
+          console.error('Upload error:', error);
+          showToast('Erreur lors du téléversement', 'error');
+          progressContainer.style.display = 'none';
+        }, 
+        async () => {
+          try {
+            const url = await uploadTask.snapshot.ref.getDownloadURL();
+            const user = auth.currentUser;
+            await db.collection('archives').add({
+              name: nameInput,
+              url: url,
+              fileName: file.name,
+              createdAt: new Date(),
+              uploadedBy: user ? user.uid : 'inconnu',
+              uploadedByEmail: user ? user.email : 'inconnu'
+            });
+            showToast('Document archivé avec succès !', 'success');
+            closeArchiveModal();
+          } catch (e) {
+            console.error('Firestore error:', e);
+            showToast('Erreur lors de l\'enregistrement', 'error');
+          }
+        }
+      );
+    });
+  }
 
 });

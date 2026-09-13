@@ -148,7 +148,7 @@
  
   /* CORPS DU BADGE */
   .body {
-    flex: 1; background: var(--cream); padding: 10px 16px 6px;
+    flex: 1; background: var(--cream); padding: 4px 16px 4px;
     display: flex; flex-direction: column; align-items: center;
     text-align: center;
   }
@@ -156,13 +156,13 @@
   .name {
     font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px;
     line-height: 1.1; color: var(--charcoal); margin-bottom: 2px;
-    margin-top: 14px;
+    margin-top: 6px;
   }
-  .profession { font-size: 12px; font-weight: 500; color: #666; margin-bottom: 10px; }
+  .profession { font-size: 12px; font-weight: 500; color: #666; margin-bottom: 4px; }
   
   .committee {
-    font-size: 12px; font-weight: 700; color: #fff; background: #0B4628;
-    padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;
+    font-size: 11px; font-weight: 700; color: #fff; background: #0B4628;
+    padding: 3px 12px; border-radius: 20px; margin-bottom: 4px;
   }
  
   .qr-box {
@@ -324,9 +324,8 @@
         <div class="logo-row"> 
           <div class="logo-banner"><img src="logo_texte.png" alt="AEEMCI 50 Ans" onerror="this.src='https://api.dicebear.com/9.x/initials/svg?seed=AEEMCI&backgroundColor=ffffff&textColor=0B4628'"></div>
         </div> 
-        <div class="event-title-box">
-           <span class="edition">Édition 3</span>
-           <span class="gradaa">GRADAA 2026</span>
+        <div class="event-title-box" style="margin-top:-5px;">
+           <img src="assets/logo-gradaa-badge.png" alt="GRADAA 2026" style="height:46px; object-fit:contain;" />
         </div>
         ${headerHTML}
       </div> 
@@ -344,7 +343,7 @@
   
     if (isNominative && qrUrl) {
         new QRCode(document.getElementById(`qr-${i}`), { 
-          text: qrUrl, width: 110, height: 110, 
+          text: qrUrl, width: 90, height: 90, 
           colorDark: "#241E19", colorLight: "#ffffff", 
           correctLevel: QRCode.CorrectLevel.M 
         }); 

@@ -579,6 +579,9 @@
       </button>
 
       <div class="sidebar__nav-section">Outils</div>
+      <button class="sidebar__nav-item" data-section="archives" id="nav-archives">
+        🗄️ Archives
+      </button>
       <button class="sidebar__nav-item" data-section="badges" id="nav-badges">
         🪪 Badges
       </button>
@@ -1050,6 +1053,37 @@
         </div>
       </section>
 
+      <!-- ── SECTION: Archives ── -->
+      <section id="section-archives" class="section-content" style="display:none;">
+        <div class="table-card" style="margin-bottom:var(--space-6);">
+          <div class="table-card__header" style="display:flex; justify-content:space-between; align-items:center; padding:var(--space-4) var(--space-5);">
+            <div>
+              <h3 style="margin:0;">Documents Archivés</h3>
+              <p style="font-size:0.85rem;color:var(--color-text-muted);margin-top:4px;">Stockez et gérez les documents importants (PDF, Excel, Word, Images...).</p>
+            </div>
+            <button class="btn btn--primary" id="btn-add-archive">➕ Importer un document</button>
+          </div>
+          <div class="table-toolbar">
+            <input type="search" id="archive-search-input" class="search-input" placeholder="🔍 Rechercher un document..." style="max-width: 300px; width: 100%;" />
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nom du document</th>
+                  <th>Date d'ajout</th>
+                  <th>Ajouté par</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="archives-table-body">
+                <!-- Rempli par JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </div>
 
 <!-- Admin Modal -->
@@ -1088,6 +1122,36 @@
   </main>
 </div>
 
+<!-- Archive Modal -->
+<div id="archive-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="archive-modal-title" style="margin:0;">Importer un document</h3>
+      <button class="modal-close" onclick="closeArchiveModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:var(--space-4);">
+        <label style="display:block;margin-bottom:var(--space-2);font-weight:600;font-size:0.9rem;">Nom du document</label>
+        <input type="text" id="archive-modal-name" class="form-input" placeholder="Nom descriptif du fichier">
+      </div>
+      <div style="margin-bottom:var(--space-4);">
+        <label style="display:block;margin-bottom:var(--space-2);font-weight:600;font-size:0.9rem;">Fichier</label>
+        <input type="file" id="archive-modal-file" class="form-input" style="padding: 0.5rem; background: #fff; cursor: pointer;">
+      </div>
+      <div id="archive-upload-progress-container" style="display:none; margin-bottom:var(--space-4);">
+        <p style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom: 4px;">Téléversement en cours...</p>
+        <div style="width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
+          <div id="archive-upload-progress-bar" style="width: 0%; background: var(--color-primary); height: 100%; transition: width 0.2s;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--outline" onclick="closeArchiveModal()" id="btn-cancel-archive">Annuler</button>
+      <button class="btn btn--primary" id="btn-save-archive">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- Participant Modal -->
 <div id="participant-modal" class="modal-overlay">
   <div class="modal-content">
@@ -1113,6 +1177,34 @@
   </div>
 </div>
 
+<!-- Commission Members Modal -->
+<div id="commission-modal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 id="commission-modal-title" style="margin:0;">Membres de la Commission</h3>
+      <button class="modal-close" onclick="closeCommissionModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Participant</th>
+            <th>Contact</th>
+            <th>Statut Paiement</th>
+          </tr>
+        </thead>
+        <tbody id="commission-modal-tbody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--outline" onclick="closeCommissionModal()">Fermer</button>
+      <button class="btn btn--primary" id="btn-export-commission-modal">📥 Exporter la liste</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
@@ -1124,7 +1216,7 @@
 <script src="js/badge-generator.js?v=1.0"></script>
 <script src="js/email-service.js?v=2.0"></script>
 <script src="js/qr-generator.js"></script>
-<script src="js/admin.js?v=2.2"></script>
+<script src="js/admin.js?v=2.4"></script>
 
 <!-- qrcode.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
