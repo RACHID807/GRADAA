@@ -456,10 +456,13 @@
 
       <div class="sidebar__nav-section">Outils</div>
       <button class="sidebar__nav-item" data-section="qrcode" id="nav-qrcode">
-        ðŸ”³ QR Code
+        📌 QR Code
       </button>
       <button class="sidebar__nav-item" data-section="export" id="nav-export">
-        ðŸ“¥ Export donnÃ©es
+        📥 Export données
+      </button>
+      <button class="sidebar__nav-item" data-section="video" id="nav-video">
+        🎬 Vidéo Promo
       </button>
     </nav>
 
@@ -677,47 +680,78 @@
         </div>
       </section>
 
-      <!-- â”€â”€ SECTION: Export â”€â”€ -->
+      <!-- ── SECTION: Export ── -->
       <section id="section-export" class="section-content" style="display:none;">
         <div class="card" style="max-width:600px;">
-          <h2 style="margin-bottom:var(--space-4);">ðŸ“¥ Export des donnÃ©es</h2>
+          <h2 style="margin-bottom:var(--space-4);">📥 Export des données</h2>
 
           <div style="display:flex;flex-direction:column;gap:var(--space-4);">
             <div class="card card--orange">
-              <h4 style="margin-bottom:var(--space-2);">ðŸ“„ Export CSV</h4>
+              <h4 style="margin-bottom:var(--space-2);">📄 Export CSV</h4>
               <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
-                Exporte tous les participants avec leurs informations complÃ¨tes au format CSV, compatible Excel et Google Sheets.
+                Exporte tous les participants avec leurs informations complètes au format CSV, compatible Excel et Google Sheets.
               </p>
               <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
                 <button id="btn-export-all" class="btn btn--primary">
-                  ðŸ“Š Exporter tous les inscrits
+                  📊 Exporter tous les inscrits
                 </button>
                 <button id="btn-export-present" class="btn btn--secondary">
-                  âœ… Exporter les prÃ©sents seulement
+                  ✅ Exporter les présents seulement
                 </button>
               </div>
             </div>
 
             <div class="card">
-              <h4 style="margin-bottom:var(--space-2);">ðŸ“§ Emails non envoyÃ©s</h4>
+              <h4 style="margin-bottom:var(--space-2);">📧 Emails non envoyés</h4>
               <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
-                Liste des participants n'ayant pas reÃ§u leur reÃ§u par email.
+                Liste des participants n'ayant pas reçu leur reçu par email.
               </p>
               <button id="btn-export-email-failed" class="btn btn--outline">
-                ðŸ“‹ Exporter la liste des emails non envoyÃ©s
+                📋 Exporter la liste des emails non envoyés
               </button>
             </div>
 
             <div class="card">
-              <h4 style="margin-bottom:var(--space-2);">ðŸ“§ Renvoi d'emails en masse</h4>
+              <h4 style="margin-bottom:var(--space-2);">📧 Renvoi d'emails en masse</h4>
               <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-3);">
-                Met en file d'attente le renvoi des reÃ§us pour tous les participants dont l'email n'a pas Ã©tÃ© envoyÃ©.
+                Met en file d'attente le renvoi des reçus pour tous les participants dont l'email n'a pas été envoyé.
               </p>
               <button id="btn-resend-all-emails" class="btn btn--outline-green">
-                ðŸ”„ Re-planifier l'envoi des emails manquants
+                🔄 Re-planifier l'envoi des emails manquants
               </button>
               <div id="resend-result" style="margin-top:var(--space-3);display:none;"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Vidéo Promotionnelle ── -->
+      <section id="section-video" class="section-content" style="display:none;">
+        <div class="card" style="max-width:850px; margin:0 auto;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);flex-wrap:wrap;gap:var(--space-3);">
+            <div>
+              <h2 style="margin-bottom:var(--space-1);">🎬 Vidéo Promotionnelle Officielle (1m25s)</h2>
+              <p style="color:var(--color-text-muted);font-size:0.9rem;">
+                Générez et téléchargez la vidéo promotionnelle officielle pour la diffuser sur WhatsApp et les réseaux sociaux.
+              </p>
+            </div>
+            <a href="promo-video.html" target="_blank" class="btn btn--outline btn--sm">
+              ↗️ Ouvrir la vidéo plein écran
+            </a>
+          </div>
+
+          <div class="card card--orange" style="margin-bottom:var(--space-5);text-align:center;padding:var(--space-6);">
+            <h3 style="margin-bottom:var(--space-2);color:var(--color-primary-dark);">📹 Enregistrer & Télécharger la Vidéo dans la Galerie</h3>
+            <p style="color:var(--color-text-muted);font-size:0.9rem;margin-bottom:var(--space-4);max-width:620px;margin-left:auto;margin-right:auto;">
+              Cliquez sur le bouton ci-dessous pour démarrer l'enregistrement de la vidéo promo (1 min 25s). Le fichier vidéo (MP4/WebM) sera généré et sauvegardé directement dans vos téléchargements et votre Galerie.
+            </p>
+            <button id="btn-admin-download-video" class="btn btn--primary btn--lg" style="font-weight:800;font-size:1rem;padding:var(--space-4) var(--space-6);box-shadow:var(--shadow-md);">
+              📥 Démarrer l'enregistrement & Télécharger la vidéo
+            </button>
+          </div>
+
+          <div style="border: 2px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; height: 500px; background: #000; position: relative;">
+            <iframe id="promo-video-iframe" src="promo-video.html" style="width:100%; height:100%; border:none;" title="Aperçu Vidéo Promotionnelle GRADAA 2026"></iframe>
           </div>
         </div>
       </section>

@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // admin.js â€” Logique du tableau de bord GRADA
 // ============================================================
 
@@ -84,11 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSection = name;
 
     const titles = {
-      overview: 'ðŸ“Š Vue d\'ensemble',
-      participants: 'ðŸ‘¥ Participants',
-      checkin: 'âœ… Check-in â€” Jour J',
-      qrcode: 'ðŸ”³ QR Code d\'accÃ¨s',
-      export: 'ðŸ“¥ Export des donnÃ©es'
+      overview: '📊 Vue d\'ensemble',
+      participants: '👥 Participants',
+      checkin: '✅ Check-in — Jour J',
+      qrcode: '📌 QR Code d\'accès',
+      export: '📥 Export des données',
+      video: '🎬 Vidéo Promotionnelle Officielle'
     };
     document.getElementById('page-title').textContent = titles[name] || '';
 
@@ -603,9 +604,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `<div class="alert alert--success"><span>âœ… ${count} emails planifiÃ©s pour renvoi !</span></div>`;
+    resultDiv.innerHTML = `<div class="alert alert--success"><span>✅ ${count} emails planifiés pour renvoi !</span></div>`;
     btn.disabled = false;
-    btn.textContent = 'ðŸ”„ Re-planifier l\'envoi des emails manquants';
+    btn.textContent = '🔄 Re-planifier l\'envoi des emails manquants';
     showToast(`${count} emails mis en file d'attente !`, 'success');
+  });
+
+  // ── Download Video in Admin Panel ──
+  document.getElementById('btn-admin-download-video')?.addEventListener('click', async () => {
+    try {
+      const confirmRec = confirm(
+        "📹 ENREGISTREMENT DE LA VIDÉO PROMO (1m25s)\n\n" +
+        "1. Cliquez sur 'OK'.\n" +
+        "2. Dans la boîte de dialogue du navigateur, sélectionnez cet onglet/fenêtre.\n" +
+        "3. La vidéo rejouera pendant 1m25s et le fichier (MP4/WebM) sera automatiquement téléchargé dans votre Galerie !"
+      );
+      if (!confirmRec) return;
+
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "browser" },
+        audio: true
+      });
+
+      const mimeType = MediaRecorder.isTypeSupported('video/mp4') 
+        ? 'video/mp4' 
+        : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `GRADAA-2026-Video-Officielle-1m25s.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 1000);
+        showToast('Vidéo enregistrée et téléchargée avec succès !', 'success');
+      };
+
+      mediaRecorder.start();
+
+      // Trigger video replay in the iframe if loaded
+      const iframe = document.getElementById('promo-video-iframe');
+      if (iframe && iframe.contentWindow && iframe.contentWindow.replayVideo) {
+        iframe.contentWindow.replayVideo();
+      }
+
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }, 87500);
+
+    } catch (err) {
+      console.warn('Erreur capture vidéo admin:', err);
+      showToast("Autorisez la capture d'écran pour enregistrer la vidéo.", 'warning');
+    }
   });
 });
