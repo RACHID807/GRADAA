@@ -1075,14 +1075,8 @@
       utterance.onend = () => setAzanVolume(0.25);
       utterance.onerror = utterance.onend;
 
-      const deliverSpeech = () => {
-        if (speechSynthesis.speaking) {
-          setTimeout(deliverSpeech, 40);
-        } else {
-          speechSynthesis.speak(utterance);
-        }
-      };
-      deliverSpeech();
+      if (speechSynthesis.speaking) speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
     }
 
     // ── MAIN LOOP & CONTROLLER ──
@@ -1157,6 +1151,7 @@
         isPaused = false;
         startTime = performance.now() - pausedTime;
         if (adhanAudio) adhanAudio.play();
+        if ('speechSynthesis' in window) speechSynthesis.resume();
         animFrame = requestAnimationFrame(animate);
         if (label) label.textContent = 'Pause';
         if (icon) icon.textContent = '⏸️';
