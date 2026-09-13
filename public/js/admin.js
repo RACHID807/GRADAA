@@ -815,7 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── QR Code ───────────────────────────────────────────────────
   function initQRCode() {
-    const url = `${window.location.origin}/checkin.html`;
+    const url = `https://grada-anyama.web.app/checkin.html`;
     document.getElementById('qr-url').textContent = url;
 
     window.GradaQR.generate('qr-code-container', url, {

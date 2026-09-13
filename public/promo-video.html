@@ -865,10 +865,16 @@
 
   </div>
 
-  <!-- Audio Element -->
+  <!-- Audio Elements -->
   <audio id="adhan-audio" loop preload="auto">
     <source src="audio/adhan.mp3" type="audio/mpeg" />
   </audio>
+  
+  <audio id="voice-audio" preload="auto">
+    <source src="audio/audio.ogg" type="audio/ogg" />
+  </audio>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     // ═══════════════════════════════════════════
@@ -961,42 +967,20 @@
 
     let executedTimeline = new Set();
 
-    // ── QR Code Canvas Generator ──
+    // ── QR Code Generator ──
     function drawQRCode(targetId, size = 140) {
       const container = document.getElementById(targetId);
       if (!container) return;
       container.innerHTML = '';
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, size, size);
-      ctx.fillStyle = '#1A1A1A';
       
-      const scale = size / 140;
-
-      function drawMarker(x, y) {
-        ctx.fillRect(x*scale, y*scale, 36*scale, 36*scale);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect((x + 5)*scale, (y + 5)*scale, 26*scale, 26*scale);
-        ctx.fillStyle = '#F97316';
-        ctx.fillRect((x + 10)*scale, (y + 10)*scale, 16*scale, 16*scale);
-        ctx.fillStyle = '#1A1A1A';
-      }
-      drawMarker(5, 5);
-      drawMarker(95, 5);
-      drawMarker(5, 95);
-
-      for(let i = 0; i < 14; i++) {
-        for(let j = 0; j < 14; j++) {
-          if ((i<4 && j<4) || (i>9 && j<4) || (i<4 && j>9)) continue;
-          if ((i*11 + j*17 + 3) % 4 === 0) {
-            ctx.fillRect(i*10*scale, j*10*scale, 8*scale, 8*scale);
-          }
-        }
-      }
-      container.appendChild(canvas);
+      new QRCode(container, {
+        text: 'https://grada-anyama.web.app',
+        width: size,
+        height: size,
+        colorDark : "#1A1A1A",
+        colorLight : "#FFFFFF",
+        correctLevel : QRCode.CorrectLevel.M
+      });
     }
     drawQRCode('qr-container', 140);
 
@@ -1026,27 +1010,19 @@
       document.getElementById('subtitle-text').textContent = text;
     }
 
-    // ── AUDIO & SPEECH SYNTHESIS ENGINE ──
+    // ── AUDIO ENGINE ──
     let adhanAudio = null;
-    let frenchVoice = null;
+    let voiceAudio = null;
 
     function initAudio() {
       adhanAudio = document.getElementById('adhan-audio');
       if (adhanAudio) {
-        adhanAudio.volume = 0.25; // Soft Azan background level
+        adhanAudio.volume = 0.25; // Restore Azan background level
       }
-
-      if ('speechSynthesis' in window) {
-        const loadVoices = () => {
-          const voices = speechSynthesis.getVoices();
-          frenchVoice = voices.find(v => v.lang === 'fr-FR' && (v.name.includes('Paul') || v.name.includes('Thomas') || v.name.includes('Henri')))
-                     || voices.find(v => v.lang === 'fr-FR' && v.name.includes('Google') && !v.name.includes('Female'))
-                     || voices.find(v => v.lang === 'fr-FR' && !v.localService)
-                     || voices.find(v => v.lang === 'fr-FR')
-                     || voices.find(v => v.lang.startsWith('fr'));
-        };
-        speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
+      
+      voiceAudio = document.getElementById('voice-audio');
+      if (voiceAudio) {
+        voiceAudio.volume = 1.0;
       }
     }
 
@@ -1062,21 +1038,7 @@
     }
 
     function speakText(text) {
-      if (!('speechSynthesis' in window)) return;
-      setAzanVolume(0.08); // Duck Azan while speech plays
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'fr-FR';
-      utterance.rate = 1.25; // Fast, dynamic rhythm
-      utterance.pitch = 1.1; // Attractive male voice, not too deep
-      utterance.volume = 1.0;
-      if (frenchVoice) utterance.voice = frenchVoice;
-
-      utterance.onend = () => setAzanVolume(0.25);
-      utterance.onerror = utterance.onend;
-
-      if (speechSynthesis.speaking) speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
+      // TTS is disabled. Voice is now handled by the audio.ogg track.
     }
 
     // ── MAIN LOOP & CONTROLLER ──
@@ -1121,6 +1083,11 @@
       document.getElementById('play-overlay').classList.add('hidden');
       initAudio();
       playAzan();
+      
+      if (voiceAudio) {
+        voiceAudio.currentTime = 0;
+        voiceAudio.play().catch(e => console.warn('Voice play warning:', e));
+      }
 
       startTime = performance.now();
       executedTimeline.clear();
@@ -1151,7 +1118,7 @@
         isPaused = false;
         startTime = performance.now() - pausedTime;
         if (adhanAudio) adhanAudio.play();
-        if ('speechSynthesis' in window) speechSynthesis.resume();
+        if (voiceAudio) voiceAudio.play();
         animFrame = requestAnimationFrame(animate);
         if (label) label.textContent = 'Pause';
         if (icon) icon.textContent = '⏸️';
@@ -1159,7 +1126,7 @@
         isPaused = true;
         pausedTime = performance.now() - startTime;
         if (adhanAudio) adhanAudio.pause();
-        if ('speechSynthesis' in window) speechSynthesis.pause();
+        if (voiceAudio) voiceAudio.pause();
         cancelAnimationFrame(animFrame);
         if (label) label.textContent = 'Reprendre';
         if (icon) icon.textContent = '▶️';
@@ -1167,15 +1134,15 @@
     }
 
     function replayVideo() {
-      if ('speechSynthesis' in window) speechSynthesis.cancel();
       if (adhanAudio) adhanAudio.pause();
+      if (voiceAudio) voiceAudio.pause();
       cancelAnimationFrame(animFrame);
       startVideo();
     }
 
     function stopVideo() {
       if (adhanAudio) adhanAudio.pause();
-      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      if (voiceAudio) voiceAudio.pause();
     }
 
     function shareOnWhatsApp() {
