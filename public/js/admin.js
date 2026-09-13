@@ -1338,62 +1338,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Download Video in Admin Panel ──
   document.getElementById('btn-admin-download-video')?.addEventListener('click', async () => {
     try {
-      const confirmRec = confirm(
-        "📹 ENREGISTREMENT DE LA VIDÉO PROMO (1m08s)\n\n" +
-        "1. Cliquez sur 'OK'.\n" +
-        "2. Dans la boîte de dialogue du navigateur, sélectionnez cet onglet/fenêtre.\n" +
-        "3. La vidéo rejouera pendant 1m08s et le fichier (MP4/WebM) sera automatiquement téléchargé dans votre Galerie !"
-      );
-      if (!confirmRec) return;
-
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: "browser" },
-        audio: true
-      });
-
-      const mimeType = MediaRecorder.isTypeSupported('video/mp4') 
-        ? 'video/mp4' 
-        : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      const chunks = [];
-
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: mimeType });
-        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `GRADAA-2026-Video-Officielle-1m08s.${ext}`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 1000);
-        showToast('Vidéo enregistrée et téléchargée avec succès !', 'success');
-      };
-
-      mediaRecorder.start();
-
-      // Trigger video replay in the iframe if loaded
-      const iframe = document.getElementById('promo-video-iframe');
-      if (iframe && iframe.contentWindow && iframe.contentWindow.replayVideo) {
-        iframe.contentWindow.replayVideo();
-      }
-
-      setTimeout(() => {
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
-      }, 70500);
-
+      const a = document.createElement('a');
+      a.href = 'video/GRADAA-2026-Video-Officielle.mp4';
+      a.download = 'GRADAA-2026-Video-Officielle.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Téléchargement de la vidéo lancé !', 'success');
     } catch (err) {
-      console.warn('Erreur capture vidéo admin:', err);
-      showToast("Autorisez la capture d'écran pour enregistrer la vidéo.", 'warning');
+      console.warn('Erreur téléchargement vidéo:', err);
+      showToast("Impossible de télécharger la vidéo.", 'error');
     }
   });
 
