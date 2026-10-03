@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "express": "^5.2.1",
+    "puppeteer": "^19.0.0",
+    "puppeteer-screen-recorder": "^3.0.6"
+  }
+}

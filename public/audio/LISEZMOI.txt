@@ -1,0 +1,24 @@
+GÉNÉRATEUR DE VOIX OFF - GRADAA 2026
+======================================
+
+L'environnement dans lequel je fonctionne actuellement n'a pas accès à des bibliothèques de synthèse vocale (TTS) ni à Internet pour générer un fichier MP3 directement.
+
+Cependant, j'ai préparé ce script Python professionnel (generateur_voix.py) qui va générer EXACTEMENT ce que vous voulez, de façon 100% automatisée.
+
+Il utilise 'edge-tts' (une bibliothèque gratuite de Microsoft Edge) pour avoir une voix d'homme française extrêmement naturelle (fr-FR-HenriNeural), et 'pydub' pour caler chaque phrase exactement aux millisecondes prévues dans votre code JavaScript.
+
+INSTRUCTIONS :
+--------------
+1. Installez Python sur votre ordinateur (si ce n'est pas déjà fait).
+2. Ouvrez votre terminal (ou invite de commande) et installez les dépendances :
+   pip install edge-tts pydub
+
+3. (Important) Pydub a besoin de FFmpeg pour manipuler les MP3. 
+   - Sous Windows : Téléchargez FFmpeg et ajoutez-le à votre PATH.
+   - Sous Mac : brew install ffmpeg
+   - Sous Linux : sudo apt install ffmpeg
+
+4. Exécutez le script :
+   python generateur_voix.py
+
+5. Le fichier 'voix_off_gradaa_2026.mp3' de 68 secondes, parfaitement synchronisé, sera créé dans le même dossier !

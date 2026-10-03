@@ -357,14 +357,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Finances & CO ─────────────────────────────────────────────
   function updateFinanceSection() {
     const coMembers = allParticipants.filter(p => p.role === 'CO');
-    let totalCollected = 0;
+    const ainesMembers = allParticipants.filter(p => p.role === 'AINE');
+    
+    let totalCollectedCO = 0;
+    let totalCollectedAines = 0;
     const statsByCommission = {};
 
     coMembers.forEach(p => {
       const comm = p.subCommittee || 'Inconnue';
       const amount = p.paymentAmount || 1500;
       if (p.paymentStatus === 'paid') {
-        totalCollected += amount;
+        totalCollectedCO += amount;
       }
       
       if (!statsByCommission[comm]) {
@@ -376,8 +379,27 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    ainesMembers.forEach(p => {
+      const amount = p.paymentAmount || 0;
+      if (p.paymentStatus === 'paid') {
+        totalCollectedAines += amount;
+      }
+    });
+
+    const grandTotal = totalCollectedCO + totalCollectedAines;
+
     document.getElementById('kpi-co-total').textContent = coMembers.length;
-    document.getElementById('kpi-finance-total').textContent = totalCollected.toLocaleString('fr-FR') + ' F';
+    
+    const coSumEl = document.getElementById('kpi-co-sum');
+    if (coSumEl) coSumEl.textContent = totalCollectedCO.toLocaleString('fr-FR') + ' F';
+    
+    const ainesTotalEl = document.getElementById('kpi-aines-total');
+    if (ainesTotalEl) ainesTotalEl.textContent = ainesMembers.length;
+    
+    const ainesSumEl = document.getElementById('kpi-aines-sum');
+    if (ainesSumEl) ainesSumEl.textContent = totalCollectedAines.toLocaleString('fr-FR') + ' F';
+
+    document.getElementById('kpi-finance-total').textContent = grandTotal.toLocaleString('fr-FR') + ' F';
 
     const tbody = document.getElementById('finance-tbody');
     if (tbody) {
@@ -422,7 +444,22 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="btn btn--sm btn--primary" onclick="validatePayment('${p.id}')">✅ Valider</button>
           </td>
         </tr>
-      `).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--color-text-muted);padding:2rem;">Aucun paiement en attente</td></tr>`;
+      `).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--color-text-muted);padding:2rem;">Aucun paiement CO en attente</td></tr>`;
+    }
+
+    const ainesTbody = document.getElementById('finance-aines-tbody');
+    if (ainesTbody) {
+      ainesTbody.innerHTML = ainesMembers.map(p => `
+        <tr>
+          <td><span class="badge badge--purple" style="font-size:0.7rem;">${escapeHtml(p.registrationNumber)}</span></td>
+          <td><strong>${escapeHtml(p.lastName)} ${escapeHtml(p.firstName)}</strong><br><span style="font-size:0.75rem;color:var(--color-text-muted);">${escapeHtml(p.phone)}</span></td>
+          <td><span style="font-weight:600;">${(p.paymentAmount || 0).toLocaleString('fr-FR')} F</span></td>
+          <td>${p.paymentStatus === 'paid' ? '<span class="badge badge--green">✅ Payé</span>' : '<span class="badge badge--orange">⏳ En attente</span>'}</td>
+          <td>
+            ${p.paymentStatus === 'pending' ? `<button class="btn btn--sm btn--primary" onclick="validatePayment('${p.id}')">✅ Valider</button>` : '—'}
+          </td>
+        </tr>
+      `).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--color-text-muted);padding:2rem;">Aucun Aîné enregistré</td></tr>`;
     }
   }
 
@@ -666,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const search = document.getElementById('search-input')?.value?.toLowerCase() || '';
     const subFilter = document.getElementById('filter-subcommittee')?.value || '';
     const checkinFilter = document.getElementById('filter-checkin')?.value || '';
+    const roleFilter = document.getElementById('filter-role')?.value || '';
 
     filteredParticipants = allParticipants.filter(p => {
       const name = `${p.firstName} ${p.lastName} ${p.email} ${p.phone} ${p.registrationNumber}`.toLowerCase();
@@ -679,7 +717,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (checkinFilter === 'true') matchCheckin = p.checkedIn;
       else if (checkinFilter === 'false') matchCheckin = !p.checkedIn;
 
-      return matchSearch && matchSub && matchCheckin;
+      let matchRole = true;
+      if (roleFilter) matchRole = p.role === roleFilter;
+
+      return matchSearch && matchSub && matchCheckin && matchRole;
     });
 
     currentPage = 1;
@@ -714,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="table-actions">
             <button class="btn btn--ghost btn--sm" onclick="downloadReceipt('${p.id}')" title="Télécharger le reçu">📄</button>
             <button class="btn btn--ghost btn--sm" onclick="resendEmail('${p.id}')" title="Renvoyer l'email">📧</button>
-            <button class="btn btn--ghost btn--sm" onclick="printSingleBadge('${p.id}')" title="Imprimer le badge">🪪</button>
+            ${p.role !== 'AINE' ? `<button class="btn btn--ghost btn--sm" onclick="printSingleBadge('${p.id}')" title="Imprimer le badge">🪪</button>` : ''}
           </div>
         </td>
       </tr>
@@ -729,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Filters
-  ['search-input', 'filter-subcommittee', 'filter-checkin'].forEach(id => {
+  ['search-input', 'filter-subcommittee', 'filter-checkin', 'filter-role'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', applyFilters);
   });

@@ -119,7 +119,7 @@ window.GradaBadge = (() => {
 
     // Photo
     const photoY = y + 20;
-    const photoSize = 24;
+    const photoSize = 40;
     const photoX = x + (BADGE_W - photoSize) / 2;
     
     // Draw placeholder circle
@@ -145,7 +145,7 @@ window.GradaBadge = (() => {
     }
 
     // Name
-    const nameY = photoY + photoSize + 6;
+    const nameY = photoY + photoSize + 4;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     setTextColor(doc, isCO ? COLORS.white : COLORS.text);
@@ -172,7 +172,7 @@ window.GradaBadge = (() => {
     const qrText = JSON.stringify({ id: participant.id, source: 'gradaa' });
     const qrBase64 = await generateQRCodeBase64(qrText);
     const qrSize = 18;
-    const qrY = nameY + 12;
+    const qrY = nameY + 9;
     if (qrBase64) {
       if (isCO) {
         // White background for QR code so it can be scanned easily on dark badge

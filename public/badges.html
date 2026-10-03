@@ -130,7 +130,7 @@
  
   /* PHOTO */
   .photo-wrap {
-    margin: 6px auto 0; width: 72px; height: 72px;
+    margin: 6px auto 0; width: 100px; height: 100px;
     border-radius: 50%; background: #fff; padding: 4px;
     box-shadow: 0 4px 12px rgba(0,0,0,.2);
   }
@@ -259,13 +259,14 @@
   participants.forEach((p, i) => { 
     // Détermination dynamique du thème basé sur le rôle issu de Firebase ou du bouton générique
     let badgeTheme = "PARTICIPANT";
-    if (p.role === "CO") badgeTheme = "CO";
+    if (p.role === "CO" && p.committee !== "PRESIDENT") badgeTheme = "CO";
     else if (p.role === "PANELISTE") badgeTheme = "PANELISTE";
     else if (p.role === "MEDIAS") badgeTheme = "MEDIAS";
     else if (p.role === "PCO") badgeTheme = "PCO";
 
     let displayRole = "PARTICIPANT";
-    if (p.role === "CO") displayRole = "C.O";
+    if (p.role === "CO" && p.committee !== "PRESIDENT") displayRole = "C.O";
+    else if (p.committee === "PRESIDENT") displayRole = "PRÉSIDENT";
     else if (p.role === "PANELISTE") displayRole = "PANÉLISTE";
     else if (p.role === "MEDIAS") displayRole = "MÉDIAS";
     else if (p.role === "PCO") displayRole = "PCO";

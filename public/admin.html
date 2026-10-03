@@ -758,6 +758,12 @@
                 <option value="Anyama 2">Anyama 2</option>
                 <option value="none">Non renseigné</option>
               </select>
+              <select id="filter-role" class="filter-select" aria-label="Filtrer par rôle">
+                <option value="">Tous les rôles</option>
+                <option value="participant">Participant</option>
+                <option value="CO">CO</option>
+                <option value="AINE">Aîné</option>
+              </select>
               <select id="filter-checkin" class="filter-select" aria-label="Filtrer par check-in">
                 <option value="">Tous</option>
                 <option value="true">Présents</option>
@@ -831,12 +837,17 @@
           <div class="kpi-card kpi-card--orange">
             <div class="kpi-card__icon">💰</div>
             <div class="kpi-card__value" id="kpi-finance-total">0 F</div>
-            <div class="kpi-card__label">Total Collecté</div>
+            <div class="kpi-card__label">Total Collecté (Global)</div>
           </div>
           <div class="kpi-card kpi-card--green">
             <div class="kpi-card__icon">👥</div>
             <div class="kpi-card__value" id="kpi-co-total">0</div>
-            <div class="kpi-card__label">Membres CO Inscrits</div>
+            <div class="kpi-card__label">Membres CO (Total: <span id="kpi-co-sum">0 F</span>)</div>
+          </div>
+          <div class="kpi-card kpi-card--purple">
+            <div class="kpi-card__icon">🌟</div>
+            <div class="kpi-card__value" id="kpi-aines-total">0</div>
+            <div class="kpi-card__label">Aînés (Total: <span id="kpi-aines-sum">0 F</span>)</div>
           </div>
         </div>
 
@@ -876,6 +887,27 @@
                 </tr>
               </thead>
               <tbody id="finance-pending-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card" style="margin-top: var(--space-6);">
+          <div class="table-toolbar">
+            <span class="table-toolbar__title">🌟 Contributions des Aînés</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Inscr.</th>
+                  <th>Aîné(e)</th>
+                  <th>Montant Souhaité</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="finance-aines-tbody">
                 <!-- Dynamically populated -->
               </tbody>
             </table>
