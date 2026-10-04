@@ -248,6 +248,30 @@ document.addEventListener('DOMContentLoaded', () => {
           a.click();
         };
 
+        // Set up Mark Present button
+        const btnMarkPresentReg = document.getElementById('btn-mark-present-reg');
+        if (btnMarkPresentReg) {
+          btnMarkPresentReg.onclick = async () => {
+            btnMarkPresentReg.disabled = true;
+            document.getElementById('btn-mark-present-reg-text').style.display = 'none';
+            document.getElementById('btn-mark-present-reg-spinner').style.display = 'inline-block';
+            try {
+              await db.collection('participants').doc(participantData.id).update({
+                checkedIn: true,
+                checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              btnMarkPresentReg.style.backgroundColor = '#0B4628';
+              btnMarkPresentReg.innerHTML = '✓ Présence validée';
+            } catch (err) {
+              console.error(err);
+              alert('Erreur lors de la validation.');
+              btnMarkPresentReg.disabled = false;
+              document.getElementById('btn-mark-present-reg-text').style.display = 'inline';
+              document.getElementById('btn-mark-present-reg-spinner').style.display = 'none';
+            }
+          };
+        }
+
         // Resend Email manually
         document.getElementById('btn-resend-email').onclick = async () => {
           const btn = document.getElementById('btn-resend-email');

@@ -309,7 +309,11 @@
       </div>
 
       <div style="display:flex;flex-direction:column;gap:var(--space-3);">
-        <button id="btn-download-receipt" class="btn btn--primary btn--lg">
+        <button id="btn-mark-present-reg" class="btn btn--primary btn--lg" style="background:#16A34A; border-color:#15803D;">
+          <span id="btn-mark-present-reg-text">✅ Je suis sur place (Marquer présent)</span>
+          <span id="btn-mark-present-reg-spinner" class="spinner" style="display:none;"></span>
+        </button>
+        <button id="btn-download-receipt" class="btn btn--outline btn--lg">
           ⬇️ Télécharger mon reçu PDF
         </button>
         <button id="btn-resend-email" class="btn btn--outline">

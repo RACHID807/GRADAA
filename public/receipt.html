@@ -138,7 +138,11 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:var(--space-3);">
-          <button id="btn-download-found" class="btn btn--primary btn--full btn--lg">
+          <button id="btn-mark-present-receipt" class="btn btn--primary btn--full btn--lg" style="background:#16A34A; border-color:#15803D;">
+            <span id="btn-mark-present-receipt-text">✅ Je suis sur place (Marquer présent)</span>
+            <span id="btn-mark-present-receipt-spinner" class="spinner" style="display:none;"></span>
+          </button>
+          <button id="btn-download-found" class="btn btn--outline btn--full btn--lg">
             ⬇️ Télécharger mon reçu PDF
           </button>
           <button id="btn-resend-found" class="btn btn--outline btn--full">
@@ -288,6 +292,33 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.disabled = false; text.textContent = '🔍 Rechercher'; spinner.style.display = 'none';
     }
   });
+
+  // Mark Present
+  const btnMarkPresentReceipt = document.getElementById('btn-mark-present-receipt');
+  if (btnMarkPresentReceipt) {
+    btnMarkPresentReceipt.addEventListener('click', async () => {
+      if (!foundParticipant) return;
+      btnMarkPresentReceipt.disabled = true;
+      document.getElementById('btn-mark-present-receipt-text').style.display = 'none';
+      document.getElementById('btn-mark-present-receipt-spinner').style.display = 'inline-block';
+      try {
+        await db.collection('participants').doc(foundParticipant.id).update({
+          checkedIn: true,
+          checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        foundParticipant.checkedIn = true;
+        btnMarkPresentReceipt.style.backgroundColor = '#0B4628';
+        btnMarkPresentReceipt.innerHTML = '✓ Présence validée';
+        showToast('Présence validée avec succès !', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Erreur lors de la validation.', 'error');
+        btnMarkPresentReceipt.disabled = false;
+        document.getElementById('btn-mark-present-receipt-text').style.display = 'inline';
+        document.getElementById('btn-mark-present-receipt-spinner').style.display = 'none';
+      }
+    });
+  }
 
   // Download receipt
   document.getElementById('btn-download-found').addEventListener('click', async () => {

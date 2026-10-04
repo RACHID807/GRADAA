@@ -144,21 +144,20 @@ function initCheckin() {
         const doc = snap.docs[0];
         currentParticipant = { id: doc.id, ...doc.data() };
 
-        // Update checkin status in Firestore if not already checked in
-        if (!currentParticipant.checkedIn) {
-          await db.collection('participants').doc(doc.id).update({
-            checkedIn: true,
-            checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+        if (currentParticipant.checkedIn) {
+          // Already checked in, show Confirmed Screen
+          document.getElementById('confirmed-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
+          document.getElementById('confirmed-regnum').textContent = currentParticipant.registrationNumber;
+          document.getElementById('confirmed-email').textContent = currentParticipant.email;
+          document.getElementById('confirmed-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
+          showScreen(screenConfirmed);
+        } else {
+          // Show the explicit Marquer présent screen
+          document.getElementById('scan-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
+          document.getElementById('scan-regnum').textContent = currentParticipant.registrationNumber;
+          document.getElementById('scan-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
+          showScreen(screenScan);
         }
-
-        // Show Confirmed Screen
-        document.getElementById('confirmed-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
-        document.getElementById('confirmed-regnum').textContent = currentParticipant.registrationNumber;
-        document.getElementById('confirmed-email').textContent = currentParticipant.email;
-        document.getElementById('confirmed-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
-        
-        showScreen(screenConfirmed);
 
       } catch (err) {
         console.error("Erreur de vérification :", err);
