@@ -310,6 +310,25 @@
       </div>
     </div>
 
+    <!-- ── SCREEN 2.5: Scan (Marquer Présent) ── -->
+    <div id="screen-scan" class="screen checkin-card__body" style="text-align:center;" role="status" aria-live="polite">
+      <div class="question-emoji" style="animation:none;">📱</div>
+      <h2 style="margin-bottom:var(--space-3);">Participant identifié</h2>
+      <p style="font-size:1.1rem;margin-bottom:var(--space-2);"><strong><span id="scan-name"></span></strong></p>
+      <p style="color:var(--color-text-muted);margin-bottom:var(--space-6);">
+        Matricule: <strong id="scan-regnum" style="color:var(--color-primary);"></strong><br>
+        Sous-comité: <span id="scan-subcommittee"></span>
+      </p>
+
+      <button id="btn-mark-present" class="btn btn--primary btn--full btn--lg" style="margin-bottom:var(--space-3);">
+        <span id="btn-mark-present-text">✅ Marquer présent</span>
+        <span id="btn-mark-present-spinner" class="spinner" style="display:none;"></span>
+      </button>
+      <button class="btn btn--outline btn--full" onclick="window.location.href='index.html'">
+        Annuler
+      </button>
+    </div>
+
     <!-- ── SCREEN 3: Confirmed ── -->
     <div id="screen-confirmed" class="screen checkin-card__body" style="text-align:center;" role="status" aria-live="polite">
       <div class="confirmed-animation">✓</div>

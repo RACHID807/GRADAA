@@ -275,7 +275,7 @@
     const fullName = p.name || "";
     const profession = p.profession || (badgeTheme === "PARTICIPANT" ? "Participant" : "");
     const commission = p.committee || (badgeTheme === "CO" ? "Commission" : "");
-    const qrUrl = "https://gradaa.ci/verify/" + (p.rawId || p.id);
+    const qrUrl = "https://gradaa.ci/checkin.html?id=" + (p.rawId || p.id);
     
     let finalPhotoUrl = p.photo;
     if (!finalPhotoUrl) {

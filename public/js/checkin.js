@@ -211,6 +211,72 @@ function initCheckin() {
       btnResendCheckin.disabled = false;
     });
   }
+  // ── Handling QR Scan Check-in ──
+  const urlParams = new URLSearchParams(window.location.search);
+  let scanId = urlParams.get('id');
+  if (!scanId && window.location.pathname.startsWith('/verify/')) {
+    scanId = window.location.pathname.split('/verify/')[1];
+  }
+  const screenScan = document.getElementById('screen-scan');
+  const btnMarkPresent = document.getElementById('btn-mark-present');
+  const btnMarkPresentText = document.getElementById('btn-mark-present-text');
+  const btnMarkPresentSpinner = document.getElementById('btn-mark-present-spinner');
+
+  if (scanId) {
+    db.collection('participants').doc(scanId).get().then(doc => {
+      if (!doc.exists) {
+        showScreen(screenNotFound);
+      } else {
+        currentParticipant = { id: doc.id, ...doc.data() };
+        if (currentParticipant.checkedIn) {
+          document.getElementById('confirmed-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
+          document.getElementById('confirmed-regnum').textContent = currentParticipant.registrationNumber;
+          document.getElementById('confirmed-email').textContent = currentParticipant.email;
+          document.getElementById('confirmed-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
+          showScreen(screenConfirmed);
+        } else {
+          document.getElementById('scan-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
+          document.getElementById('scan-regnum').textContent = currentParticipant.registrationNumber;
+          document.getElementById('scan-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
+          showScreen(screenScan);
+        }
+      }
+    }).catch(err => {
+      console.error(err);
+      showScreen(screenOffline);
+    });
+  }
+
+  if (btnMarkPresent) {
+    btnMarkPresent.addEventListener('click', async () => {
+      if (!currentParticipant) return;
+      btnMarkPresent.disabled = true;
+      if (btnMarkPresentText) btnMarkPresentText.style.display = 'none';
+      if (btnMarkPresentSpinner) btnMarkPresentSpinner.style.display = 'inline-block';
+
+      try {
+        await db.collection('participants').doc(currentParticipant.id).update({
+          checkedIn: true,
+          checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        currentParticipant.checkedIn = true;
+        
+        document.getElementById('confirmed-name').textContent = `${currentParticipant.firstName} ${currentParticipant.lastName}`;
+        document.getElementById('confirmed-regnum').textContent = currentParticipant.registrationNumber;
+        document.getElementById('confirmed-email').textContent = currentParticipant.email;
+        document.getElementById('confirmed-subcommittee').textContent = currentParticipant.subCommittee || 'Non renseigné';
+        
+        showScreen(screenConfirmed);
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors de la validation.");
+      }
+      
+      btnMarkPresent.disabled = false;
+      if (btnMarkPresentText) btnMarkPresentText.style.display = 'inline';
+      if (btnMarkPresentSpinner) btnMarkPresentSpinner.style.display = 'none';
+    });
+  }
 }
 
 if (document.readyState === 'loading') {
