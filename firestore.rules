@@ -48,8 +48,11 @@ service cloud.firestore {
         || (isAuthenticated() && resource.data.uid == request.auth.uid);
       // Allow public to check for duplicates (list query)
       allow list: if true;
-      // Only admins can update/delete
-      allow update, delete: if isValidAdmin();
+      // Admins can fully update, public can only update check-in status
+      allow delete: if isValidAdmin();
+      allow update: if isValidAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedIn', 'checkedInAt'])
+      );
       // Public can read by ID (for receipt page) - relaxed for usability
       allow get: if true;
     }
