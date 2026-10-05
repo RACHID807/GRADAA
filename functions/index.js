@@ -141,6 +141,68 @@ exports.resendEmail = functions
     return { success: true, message: 'Email mis en file d\'attente et en cours d\'envoi.' };
   });
 
+// ── HTTP: Envoi des remerciements (une seule fois) ──────────
+exports.queueThankYouEmails = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    // Requires super admin
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Non autorisé');
+    const adminDoc = await getFirestore().collection('admins').doc(context.auth.uid).get();
+    if (!adminDoc.exists || adminDoc.data().role !== 'SUPER_ADMIN') {
+      throw new functions.https.HttpsError('permission-denied', 'Réservé aux super admins');
+    }
+
+    const db = getFirestore();
+    const participantsSnap = await db.collection('participants')
+      .where('eventId', '==', 'gradaa-2026')
+      .where('checkedIn', '==', true)
+      .get();
+
+    let count = 0;
+    let batch = db.batch();
+    let batchSize = 0;
+
+    for (const doc of participantsSnap.docs) {
+      const p = doc.data();
+      if (p.email) {
+        const queueRef = db.collection('emailQueue').doc();
+        batch.set(queueRef, {
+          to: p.email,
+          toName: `${p.firstName} ${p.lastName}`,
+          participantId: doc.id,
+          registrationNumber: p.registrationNumber,
+          eventId: p.eventId,
+          type: 'thank_you',
+          status: 'pending',
+          attempts: 0,
+          createdAt: FieldValue.serverTimestamp(),
+          triggeredBy: 'admin-manual'
+        });
+        count++;
+        batchSize++;
+
+        if (batchSize === 400) {
+          await batch.commit();
+          batch = db.batch();
+          batchSize = 0;
+        }
+      }
+    }
+
+    if (batchSize > 0) {
+      await batch.commit();
+    }
+
+    console.log(`Mis en file d'attente de ${count} emails de remerciement.`);
+    
+    try {
+      const { processEmailQueue } = require('./src/sendEmail');
+      await processEmailQueue();
+    } catch (e) {}
+
+    return { success: true, count, message: `${count} emails de remerciement mis en file d'attente.` };
+  });
+
 // ── HTTP: statistiques publiques (optionnel) ────────────────
 exports.getStats = functions
   .region('europe-west1')

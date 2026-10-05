@@ -65,6 +65,10 @@ function buildEmailHtml(participant) {
     title = "C'est demain ! GRADAA 2026";
     introText = `C'est le grand jour demain ! Le <strong>GRADAA 2026</strong> vous ouvre ses portes. Assurez-vous d'avoir votre reçu à portée de main.`;
     bannerText = `⏰ C'est demain ! Soyez à l'heure au rendez-vous.`;
+  } else if (type === 'thank_you') {
+    title = "Merci pour votre participation ! GRADAA 2026";
+    introText = `L'événement <strong>GRADAA 2026</strong> est maintenant terminé. Au nom de tout le bureau, nous tenons à vous remercier chaleureusement pour votre présence et votre contribution à la réussite de ce grand rassemblement.`;
+    bannerText = `🎉 Merci et à très bientôt in sha Allah !`;
   }
 
   return `
@@ -215,10 +219,15 @@ async function processEmailQueue() {
 
     try {
       const html = buildEmailHtml(participant);
+      let subject = `GRADA 2026 — Reçu d'inscription ${participant.registrationNumber}`;
+      if (data.type === 'reminder_j3') subject = "J-3 avant le GRADAA 2026 !";
+      else if (data.type === 'reminder_j1') subject = "C'est demain ! GRADAA 2026";
+      else if (data.type === 'thank_you') subject = "Merci pour votre participation ! GRADAA 2026";
+
       await sendViaBrevo(
         participant.to || participant.email,
         participant.toName || `${participant.firstName} ${participant.lastName}`,
-        `GRADA 2026 — Reçu d'inscription ${participant.registrationNumber}`,
+        subject,
         html
       );
 

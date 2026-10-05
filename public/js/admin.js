@@ -943,6 +943,41 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`${failed.length} participants avec email non envoyé exportés.`, 'success');
   });
 
+  // Send Thank You Emails
+  document.getElementById('btn-send-thank-you')?.addEventListener('click', async () => {
+    const present = allParticipants.filter(p => p.checkedIn);
+    if (present.length === 0) {
+      showToast('Aucun participant présent !', 'info');
+      return;
+    }
+
+    if (!confirm(`Vous êtes sur le point d'envoyer un email de remerciement à ${present.length} participants présents.\nCette action est irréversible. Voulez-vous continuer ?`)) {
+      return;
+    }
+
+    const btn = document.getElementById('btn-send-thank-you');
+    const resultDiv = document.getElementById('thankyou-result');
+    btn.disabled = true;
+    btn.textContent = 'Envoi en file d\'attente...';
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<div class="alert alert--info"><span>⏳</span><span>Mise en file d'attente sur les serveurs...</span></div>`;
+
+    try {
+      const queueFn = window.GRADAA.auth.app.functions('europe-west1').httpsCallable('queueThankYouEmails');
+      const res = await queueFn();
+      
+      resultDiv.innerHTML = `<div class="alert alert--success"><span>✅</span><span>${res.data.message} L'envoi se fera automatiquement en arrière-plan.</span></div>`;
+      showToast('Emails mis en file d\'attente !', 'success');
+    } catch (error) {
+      console.error(error);
+      resultDiv.innerHTML = `<div class="alert alert--error"><span>❌</span><span>Erreur : ${error.message}</span></div>`;
+      showToast('Erreur lors de la mise en file d\'attente.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📩 Envoyer les remerciements aux présents';
+    }
+  });
+
   // Resend all failed emails
   document.getElementById('btn-resend-all-emails')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-resend-all-emails');
