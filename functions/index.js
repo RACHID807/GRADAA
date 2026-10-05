@@ -155,7 +155,6 @@ exports.queueThankYouEmails = functions
     const db = getFirestore();
     const participantsSnap = await db.collection('participants')
       .where('eventId', '==', 'gradaa-2026')
-      .where('checkedIn', '==', true)
       .get();
 
     let count = 0;

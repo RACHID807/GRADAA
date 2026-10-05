@@ -67,7 +67,7 @@ function buildEmailHtml(participant) {
     bannerText = `⏰ C'est demain ! Soyez à l'heure au rendez-vous.`;
   } else if (type === 'thank_you') {
     title = "Merci pour votre participation ! GRADAA 2026";
-    introText = `L'événement <strong>GRADAA 2026</strong> est maintenant terminé. Au nom de tout le bureau, nous tenons à vous remercier chaleureusement pour votre présence et votre contribution à la réussite de ce grand rassemblement.`;
+    introText = `L'événement <strong>GRADAA 2026</strong> est maintenant terminé. Au nom du <strong>Comité d'Organisation</strong>, nous tenons à vous remercier chaleureusement pour votre implication et votre contribution à la réussite de ce grand rassemblement.`;
     bannerText = `🎉 Merci et à très bientôt in sha Allah !`;
   }
 

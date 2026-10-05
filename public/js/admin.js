@@ -945,13 +945,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Send Thank You Emails
   document.getElementById('btn-send-thank-you')?.addEventListener('click', async () => {
-    const present = allParticipants.filter(p => p.checkedIn);
+    const present = allParticipants;
     if (present.length === 0) {
-      showToast('Aucun participant présent !', 'info');
+      showToast('Aucun participant trouvé !', 'info');
       return;
     }
 
-    if (!confirm(`Vous êtes sur le point d'envoyer un email de remerciement à ${present.length} participants présents.\nCette action est irréversible. Voulez-vous continuer ?`)) {
+    if (!confirm(`Vous êtes sur le point d'envoyer un email de remerciement à TOUS les participants inscrits (${present.length}).\nCette action est irréversible. Voulez-vous continuer ?`)) {
       return;
     }
 
