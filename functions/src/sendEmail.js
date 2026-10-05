@@ -67,7 +67,7 @@ function buildEmailHtml(participant) {
     bannerText = `⏰ C'est demain ! Soyez à l'heure au rendez-vous.`;
   } else if (type === 'thank_you') {
     title = "Merci pour votre participation ! GRADAA 2026";
-    introText = `L'événement <strong>GRADAA 2026</strong> est maintenant terminé. Au nom du <strong>Comité d'Organisation</strong>, nous tenons à vous remercier chaleureusement pour votre implication et votre contribution à la réussite de ce grand rassemblement.`;
+    introText = `Nous vous remercions sincèrement pour votre présence et votre participation à la 3ᵉ édition du <strong>GRAND RASSEMBLEMENT DES AEEMCISTES D'ANYAMA (GRADAA)</strong>.<br><br>Votre mobilisation et votre contribution ont participé à la réussite de cette belle rencontre intergénérationnelle.<br><br>Au nom du comité d’organisation, merci pour votre confiance et votre disponibilité.<br><br>Fraternellement,<br><br>Le Comité d’organisation du <strong>GRADAA</strong>`;
     bannerText = `🎉 Merci et à très bientôt in sha Allah !`;
   }
 
